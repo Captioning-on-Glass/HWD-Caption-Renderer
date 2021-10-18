@@ -4,6 +4,9 @@
     package="edu.gatech.cog.ipglasses">
 
     <uses-sdk tools:overrideLibrary="com.google.zxing.client.android" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
@@ -12,6 +15,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.IPGlasses">
+        <activity
+            android:name=".CaptioningActivity"
+            android:exported="false"
+            android:label="@string/title_activity_captioning"
+            android:theme="@style/Theme.IPGlasses.NoActionBar" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
