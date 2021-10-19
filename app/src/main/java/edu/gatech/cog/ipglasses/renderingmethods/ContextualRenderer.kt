@@ -9,6 +9,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 
+
+/**
+ * Renders the currently looked-at juror's captions in a primary position, but also renders a stream of captions in the top right corner.
+ * TODO: Create a second text in the top right that shows all the words being spoken. Requires update to captioning server transmission process.
+ * @param viewModel: The [CaptioningViewModel] to serve as the single source of truth for this rendering method.
+ */
 @Composable
 fun ContextualRenderer(viewModel: CaptioningViewModel) {
     Column(

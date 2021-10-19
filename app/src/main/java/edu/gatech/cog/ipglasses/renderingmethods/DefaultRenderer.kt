@@ -20,6 +20,10 @@ fun DefaultPreview() {
     }
 }
 
+/**
+ * Renders the currently-focused juror's words in  a primary position.
+ * @param viewModel: The [CaptioningViewModel] to use as a single source of truth for captions.
+ */
 @Composable
 fun DefaultRenderer(viewModel: CaptioningViewModel) {
     Column(
