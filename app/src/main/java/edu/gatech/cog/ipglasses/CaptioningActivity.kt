@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -21,6 +22,8 @@ private const val DEFAULT_RENDERER = 1
 private const val CONTEXTUAL_RENDERER = 2
 
 class CaptioningActivity : ComponentActivity() {
+    private val model: CaptioningViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val requestedRenderingMethod = intent.getIntExtra(RENDERING_METHOD, 0)
@@ -34,8 +37,8 @@ class CaptioningActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (requestedRenderingMethod) {
-                        DEFAULT_RENDERER -> DefaultRenderer(caption = captionContent)
-                        CONTEXTUAL_RENDERER -> ContextualRenderer(caption = captionContent)
+                        DEFAULT_RENDERER -> DefaultRenderer(model)
+                        CONTEXTUAL_RENDERER -> ContextualRenderer(model)
                     }
                 }
             }
@@ -47,7 +50,7 @@ class CaptioningActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     IPGlassesTheme {
-        DefaultRenderer("Android")
+        DefaultRenderer(CaptioningViewModel())
     }
 }
 

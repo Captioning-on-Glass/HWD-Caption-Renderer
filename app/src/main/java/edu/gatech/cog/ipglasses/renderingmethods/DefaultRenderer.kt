@@ -8,23 +8,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
-
-@Composable
-fun DefaultRenderer(caption: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(text = caption)
-    }
-}
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     IPGlassesTheme {
-        DefaultRenderer("Android")
+        DefaultRenderer(CaptioningViewModel())
+    }
+}
+
+@Composable
+fun DefaultRenderer(viewModel: CaptioningViewModel) {
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(text = viewModel.caption.value)
     }
 }

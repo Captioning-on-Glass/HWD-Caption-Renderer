@@ -7,22 +7,15 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import edu.gatech.cog.ipglasses.CaptioningViewModel
 
 @Composable
-fun ContextualRenderer(caption: String) {
+fun ContextualRenderer(viewModel: CaptioningViewModel) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = caption, color = androidx.compose.ui.graphics.Color.Green)
+        Text(text = viewModel.caption.value, color = androidx.compose.ui.graphics.Color.Green)
     }
 }
-//
-//@Preview(showBackground = true)
-//@Composable
-//fun DefaultPreview() {
-//    IPGlassesTheme {
-//        ContextualRenderer("Android")
-//    }
-//}
