@@ -11,7 +11,7 @@ class CaptioningViewModel : ViewModel() {
         caption.value += " $newText"
     }
 
-    fun replaceCaption(newText: String) {
+    fun replaceText(newText: String) {
         caption.value = newText
     }
 

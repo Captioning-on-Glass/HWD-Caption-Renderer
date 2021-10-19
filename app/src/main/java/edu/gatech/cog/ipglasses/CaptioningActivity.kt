@@ -2,20 +2,27 @@ package edu.gatech.cog.ipglasses
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.renderingmethods.ContextualRenderer
 import edu.gatech.cog.ipglasses.renderingmethods.DefaultRenderer
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import java.io.DataInputStream
+import java.io.EOFException
+import java.io.IOException
+import java.net.Socket
+import java.net.UnknownHostException
 import kotlin.concurrent.thread
+import kotlin.time.Duration
 
 private val TAG = CaptioningActivity::class.java.simpleName
 private const val DEFAULT_RENDERER = 1
@@ -27,8 +34,44 @@ class CaptioningActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val requestedRenderingMethod = intent.getIntExtra(RENDERING_METHOD, 0)
+        val host = intent.getStringExtra(SERVER_HOST)
+        val port = intent.getIntExtra(SERVER_PORT, 0)
+        val gson = Gson()
         Log.d(TAG, "Requested rendering method is: $requestedRenderingMethod")
-        val captionContent = "This is the default caption"
+
+        thread {
+            try {
+                val socket = Socket(host, port)
+                while (socket.isConnected) {
+                    val messageInputStream = DataInputStream(socket.getInputStream())
+                    val messageLength = messageInputStream.readInt()
+                    val messageByteArray = ByteArray(messageLength)
+                    messageInputStream.read(messageByteArray)
+                    val message = String(messageByteArray)
+                    val receivedCaptionMessage = gson.fromJson(message, CaptionMessage::class.java)
+                    if (receivedCaptionMessage.text == "CLEAR") {
+                        model.clearText()
+                    } else {
+                        model.replaceText(receivedCaptionMessage.text)
+                    }
+                }
+            } catch (e: UnknownHostException) {
+                runOnUiThread {
+                    val toast = Toast.makeText(this, "Unknown host: $host", Toast.LENGTH_LONG)
+                    toast.show()
+                }
+            } catch (e: IOException) {
+                runOnUiThread {
+                    val toast =
+                        Toast.makeText(this, "I/O Exception: ${e.message}", Toast.LENGTH_LONG)
+                    toast.show()
+                }
+            } catch (e: EOFException) {
+                // This is a result of the server getting forcefully shut down.
+                // TODO: figure out how to handle this more gracefully.
+
+            }
+        }
         setContent {
             IPGlassesTheme {
                 // A surface container using the 'background' color from the theme
@@ -53,56 +96,3 @@ fun DefaultPreview() {
         DefaultRenderer(CaptioningViewModel())
     }
 }
-
-//
-//private const val RENDERING_MESSAGE_TYPE = 1
-//private const val CAPTION_MESSAGE_TYPE = 2
-//
-//
-//class CaptioningActivity : FragmentActivity() {
-//    private lateinit var captioningServerAddress: InetSocketAddress
-//
-//    override fun onCreate(savedInstanceState: Bundle?) {
-//        super.onCreate(savedInstanceState)
-//        setContentView(R.layout.activity_captioning)
-//        val host = intent.getStringExtra(SERVER_HOST)
-//        val port = intent.getIntExtra(SERVER_PORT, 0)
-//        val renderingMethod = intent.getIntExtra(RENDERING_METHOD, 0)
-//        renderRequestedRenderingMethod(renderingMethod)
-//    }
-//
-//    private fun renderRequestedRenderingMethod(renderingMethod: Int) {
-//
-//    }
-//
-//    //            val messageInputStream = DataInputStream(socket.getInputStream())
-////            var message: String
-////            var shouldEnd = false
-////            while (!shouldEnd) {
-////                Log.d("$TAG:thread", "Waiting for message type.")
-////                when (val messageType = messageInputStream.readInt()) {
-////                    RENDERING_MESSAGE_TYPE -> {
-////                        Log.d("$TAG:thread", "Received rendering style message type.")
-////                        val presentationMethodType = messageInputStream.readInt()
-////                        Log.d(
-////                            "$TAG:thread",
-////                            "presentation method selected: $presentationMethodType"
-////                        )
-////                        switchToCaptionFragment(presentationMethodType)
-////                    }
-//////                    CAPTION_MESSAGE_TYPE -> {
-//////                        Log.d("$TAG:thread", "Received caption message type.")
-//////                        val length = messageInputStream.readInt()
-//////                        val byteArray = ByteArray(length)
-//////                        messageInputStream.read(byteArray)
-//////                        message = String(byteArray)
-//////                    }
-////                    else -> {
-////                        Log.d("$TAG:thread", "got an unexpected message type: $messageType")
-////                        shouldEnd = true
-////                    }
-////                }
-////            }
-////        }
-//
-//}
