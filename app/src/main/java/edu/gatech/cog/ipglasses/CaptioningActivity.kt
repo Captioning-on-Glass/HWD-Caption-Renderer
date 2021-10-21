@@ -97,7 +97,7 @@ class CaptioningActivity : ComponentActivity() {
                     if (captionMessage.text == "CLEAR") {
                         model.clearText()
                     } else {
-                        model.replaceText(captionMessage.text)
+                        model.appendText(captionMessage.text)
                     }
                 }
             } catch (e: UnknownHostException) {
