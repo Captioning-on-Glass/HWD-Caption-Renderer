@@ -11,6 +11,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.renderingmethods.ContextualRenderer
@@ -53,7 +54,7 @@ class CaptioningActivity : ComponentActivity() {
             IPGlassesTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    color = MaterialTheme.colors.background,
+                    color = Color.Transparent,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (requestedRenderingMethod) {
