@@ -54,7 +54,6 @@ class CaptioningActivity : ComponentActivity() {
             IPGlassesTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
-                    color = Color.Transparent,
                     modifier = Modifier.fillMaxSize()
                 ) {
                     when (requestedRenderingMethod) {
