@@ -93,11 +93,7 @@ class CaptioningActivity : ComponentActivity() {
                         messageAsJsonString,
                         CaptionMessage::class.java
                     ) // Transform the JSON string into a CaptionMessage instance
-                    if (captionMessage.text == "CLEAR") {
-                        model.clearText()
-                    } else {
-                        model.appendText(captionMessage.text)
-                    }
+                    model.addMessage(captionMessage = captionMessage)
                 }
             } catch (e: UnknownHostException) {
                 runOnUiThread {

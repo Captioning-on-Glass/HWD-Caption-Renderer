@@ -22,6 +22,9 @@ fun ContextualRenderer(viewModel: CaptioningViewModel) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = viewModel.caption.value, color = androidx.compose.ui.graphics.Color.Green)
+        Text(
+            text = viewModel.globalCaptionMessages.value.joinToString(" ") { it.text },
+            color = androidx.compose.ui.graphics.Color.Green
+        )
     }
 }
