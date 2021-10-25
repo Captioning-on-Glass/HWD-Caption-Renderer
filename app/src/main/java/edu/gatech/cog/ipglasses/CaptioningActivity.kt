@@ -50,6 +50,7 @@ class CaptioningActivity : ComponentActivity() {
         val port = intent.getIntExtra(SERVER_PORT, 0)
         beginStreamingCaptionsFromServer(host, port)
         Log.d(TAG, "Requested rendering method is: $requestedRenderingMethod")
+        model.renderingMethodToUse = requestedRenderingMethod
         setContent {
             IPGlassesTheme {
                 // A surface container using the 'background' color from the theme
