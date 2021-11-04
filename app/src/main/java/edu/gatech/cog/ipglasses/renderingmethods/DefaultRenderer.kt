@@ -1,24 +1,32 @@
 package edu.gatech.cog.ipglasses.renderingmethods
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import edu.gatech.cog.ipglasses.CaptionMessage
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import kotlinx.coroutines.launch
 
-import androidx.compose.runtime.livedata.observeAsState
+
+private const val TAG = "DefaultRenderer"
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     val viewModel = CaptioningViewModel()
+    viewModel.renderingMethodToUse = 1
     viewModel.addMessage(
         CaptionMessage(
             messageId = 0,
@@ -29,7 +37,12 @@ fun DefaultPreview() {
         )
     )
     IPGlassesTheme {
-        DefaultRenderer(viewModel)
+        // A surface container using the 'background' color from the theme
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            DefaultRenderer(viewModel)
+        }
     }
 }
 
@@ -39,18 +52,17 @@ fun DefaultPreview() {
  */
 @Composable
 fun DefaultRenderer(viewModel: CaptioningViewModel) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+    Box(
+        contentAlignment = Alignment.BottomStart,
         modifier = Modifier
             .padding(30.dp)
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .wrapContentSize(Alignment.Center)
+            .fillMaxSize()
+            .wrapContentSize(Alignment.BottomStart)
     ) {
         Text(
+            fontSize = 20.sp,
             text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
-            color = Color.White
+            color = Color.White,
         )
     }
 }
