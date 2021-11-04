@@ -2,12 +2,8 @@ package edu.gatech.cog.ipglasses
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import edu.gatech.cog.ipglasses.Renderers.CONTEXTUAL_RENDERER
-import edu.gatech.cog.ipglasses.Renderers.DEFAULT_RENDERER
 
 
 private val TAG = CaptioningViewModel::class.java.simpleName
@@ -71,9 +67,14 @@ class CaptioningViewModel : ViewModel() {
         // we're doing. We can accomplish this by having the rendering method set ahead of time,
         // and selectively running non-performant code when necessary.
         when (renderingMethodToUse) {
-            DEFAULT_RENDERER -> updateCurrentFocusedSpeakerCaptionMessages(captionMessage)
-            CONTEXTUAL_RENDERER -> {
+            Renderers.FOCUSED_SPEAKER_ONLY -> updateCurrentFocusedSpeakerCaptionMessages(
+                captionMessage
+            )
+            Renderers.FOCUSED_SPEAKER_AND_GLOBAL -> {
                 updateCurrentFocusedSpeakerCaptionMessages(captionMessage)
+                updateGlobalCaptions(captionMessage)
+            }
+            Renderers.WHO_SAID_WHAT -> {
                 updateGlobalCaptions(captionMessage)
             }
             else -> {

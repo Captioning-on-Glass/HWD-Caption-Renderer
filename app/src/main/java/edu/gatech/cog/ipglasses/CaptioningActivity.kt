@@ -7,15 +7,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.gson.Gson
-import edu.gatech.cog.ipglasses.renderingmethods.ContextualRenderer
-import edu.gatech.cog.ipglasses.renderingmethods.DefaultRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerAndGlobalRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerOnlyRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.WhoSaidWhatRenderer
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import java.io.DataInputStream
 import java.io.EOFException
@@ -27,11 +26,43 @@ import kotlin.concurrent.thread
 private val TAG = CaptioningActivity::class.java.simpleName
 
 /**
- * List with the supported renderers available to be requested.
+ * List of all the possible renderers.
  */
 object Renderers {
-    const val DEFAULT_RENDERER = 1
-    const val CONTEXTUAL_RENDERER = 2
+    const val MONITOR_ONLY = 1 // Should do nothing.
+    const val GLOBAL_ONLY = 2 // Show all spoken language as text
+    const val MONITOR_AND_GLOBAL = 3 // Should function identically to GLOBAL_ONLY_RENDERER
+    const val GLOBAL_WITH_DIRECTION_INDICATORS = 4
+    const val WHO_SAID_WHAT = 5 // Show all spoken language as text while indicating who said what.
+    const val MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS =
+        6 // Should function identically to GLOBAL_WITH_DIRECTION_INDICATORS
+    const val FOCUSED_SPEAKER_ONLY = 8 // Show only the caption of the person being focused upon
+    const val FOCUSED_SPEAKER_AND_GLOBAL =
+        9 // Show the captions of the person being focused upon, with global text.
+}
+
+
+/**
+ * A map from the requested rendering method to a renderer. If a [Renderers] value is not in this function's `when` statement, it is not supported yet.
+ */
+@Composable
+fun RendererForRequestedMethod(requestedRenderingMethod: Int, model: CaptioningViewModel) {
+    when (requestedRenderingMethod) {
+        Renderers.MONITOR_ONLY -> {
+        } // Monitor-only is a no-op, nothing to do
+        Renderers.WHO_SAID_WHAT -> WhoSaidWhatRenderer(model)
+        Renderers.FOCUSED_SPEAKER_ONLY -> FocusedSpeakerOnlyRenderer(model)
+        Renderers.FOCUSED_SPEAKER_AND_GLOBAL -> FocusedSpeakerAndGlobalRenderer(
+            model
+        )
+        else -> {
+            Log.d(
+                TAG,
+                "Received unknown renderer value: $requestedRenderingMethod, using FocusedSpeakerOnlyRenderer instead."
+            )
+            FocusedSpeakerOnlyRenderer(viewModel = model)
+        }
+    }
 }
 
 /**
@@ -45,7 +76,7 @@ class CaptioningActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val requestedRenderingMethod =
-            intent.getIntExtra(RENDERING_METHOD, Renderers.DEFAULT_RENDERER)
+            intent.getIntExtra(RENDERING_METHOD, Renderers.FOCUSED_SPEAKER_ONLY)
         val host = intent.getStringExtra(SERVER_HOST)
         val port = intent.getIntExtra(SERVER_PORT, 0)
         beginStreamingCaptionsFromServer(host, port)
@@ -57,17 +88,10 @@ class CaptioningActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    when (requestedRenderingMethod) {
-                        Renderers.DEFAULT_RENDERER -> DefaultRenderer(model)
-                        Renderers.CONTEXTUAL_RENDERER -> ContextualRenderer(model)
-                        else -> {
-                            Log.d(
-                                TAG,
-                                "Received unknown renderer value: $requestedRenderingMethod, using DefaultRenderer instead."
-                            )
-                            DefaultRenderer(viewModel = model)
-                        }
-                    }
+                    RendererForRequestedMethod(
+                        requestedRenderingMethod = requestedRenderingMethod,
+                        model = model
+                    )
                 }
             }
         }
@@ -119,7 +143,7 @@ class CaptioningActivity : ComponentActivity() {
 @Composable
 fun DefaultPreview() {
     val viewModel = CaptioningViewModel()
-    viewModel.renderingMethodToUse = 1
+    viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
     viewModel.addMessage(
         CaptionMessage(
             messageId = 0,
@@ -134,7 +158,10 @@ fun DefaultPreview() {
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
-            DefaultRenderer(viewModel)
+            RendererForRequestedMethod(
+                requestedRenderingMethod = viewModel.renderingMethodToUse,
+                model = viewModel
+            )
         }
     }
 }

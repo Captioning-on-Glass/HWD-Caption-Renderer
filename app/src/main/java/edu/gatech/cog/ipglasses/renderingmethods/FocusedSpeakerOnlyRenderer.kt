@@ -16,11 +16,11 @@ import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
-private const val TAG = "DefaultRenderer"
+private const val TAG = "FocusedSpeakerOnlyRenderer"
 
 @Preview(showBackground = false, widthDp = 480, heightDp = 480)
 @Composable
-fun DefaultPreview() {
+fun FocusedSpeakerOnlyPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = 1
     viewModel.addMessage(
@@ -37,7 +37,7 @@ fun DefaultPreview() {
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
-            DefaultRenderer(viewModel)
+            FocusedSpeakerOnlyRenderer(viewModel)
         }
     }
 }
@@ -47,7 +47,7 @@ fun DefaultPreview() {
  * @param viewModel: The [CaptioningViewModel] to use as a single source of truth for captions.
  */
 @Composable
-fun DefaultRenderer(viewModel: CaptioningViewModel) {
+fun FocusedSpeakerOnlyRenderer(viewModel: CaptioningViewModel) {
     Box(
         modifier = Modifier
             .padding(30.dp)
