@@ -115,10 +115,26 @@ class CaptioningActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = false, widthDp = 480, heightDp = 480)
 @Composable
 fun DefaultPreview() {
+    val viewModel = CaptioningViewModel()
+    viewModel.renderingMethodToUse = 1
+    viewModel.addMessage(
+        CaptionMessage(
+            messageId = 0,
+            chunkId = 0,
+            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi. Ac orci phasellus egestas tellus.",
+            speakerId = "juror-a",
+            focusedId = "juror-a"
+        )
+    )
     IPGlassesTheme {
-        DefaultRenderer(CaptioningViewModel())
+        // A surface container using the 'background' color from the theme
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            DefaultRenderer(viewModel)
+        }
     }
 }
