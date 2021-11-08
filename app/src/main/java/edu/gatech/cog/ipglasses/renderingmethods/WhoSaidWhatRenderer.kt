@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gatech.cog.ipglasses.CaptionMessage
@@ -25,15 +26,20 @@ private const val TAG = "WhoSaidWhatRenderer"
 fun WhoSaidWhatPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.WHO_SAID_WHAT
-    viewModel.addMessage(
-        CaptionMessage(
-            messageId = 0,
-            chunkId = 0,
-            text = "Lorem ipsum dolor sit amet.",
-            speakerId = "juror-a",
-            focusedId = "juror-a"
+    val lipsum = LoremIpsum(1)
+    val jurorIds: List<String> = listOf("juror-a", "juror-b", "juror-c", "jury-foreman")
+    for ((i, chunk) in lipsum.values.take(4).iterator().withIndex()) {
+        viewModel.addMessage(
+            CaptionMessage(
+                messageId = i,
+                chunkId = 0,
+                text = chunk,
+                speakerId = jurorIds[i],
+                focusedId = jurorIds[i]
+            )
         )
-    )
+    }
+
     IPGlassesTheme {
         // A surface container using the 'background' color from the theme
         Surface(
@@ -51,29 +57,30 @@ fun WhoSaidWhatPreview() {
 @Composable
 fun WhoSaidWhatRenderer(viewModel: CaptioningViewModel) {
     val globalCaptionMessages = viewModel.globalCaptionMessages.value
-
+    val textToDisplay = if (globalCaptionMessages.isEmpty()) {
+        ""
+    } else {
+        val sortedMessagesMap = globalCaptionMessages.groupBy { it.messageId }
+            .toSortedMap() // Group all the captions we have so far by messageId
+        val latestMessage: List<CaptionMessage> =
+            sortedMessagesMap[sortedMessagesMap.lastKey()]!!
+        val speakerName = latestMessage.first().speakerId.split("-")
+            .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
+        val messageText =
+            latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
+                .joinToString(" ") { message -> message.text }
+        "$speakerName: $messageText"
+    }
     Box(
         modifier = Modifier
             .padding(30.dp)
             .fillMaxSize()
     ) {
-        Text(
+        LimitedText(
             modifier = Modifier.align(Alignment.BottomStart),
+            maxBottomLines = 100,
             fontSize = 28.sp,
-            text = if (globalCaptionMessages.isEmpty()) {
-                ""
-            } else {
-                val sortedMessagesMap = globalCaptionMessages.groupBy { it.messageId }
-                    .toSortedMap() // Group all the captions we have so far by messageId
-                val latestMessage: List<CaptionMessage> =
-                    sortedMessagesMap[sortedMessagesMap.lastKey()]!!
-                val speakerName = latestMessage.first().speakerId.split("-")
-                    .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
-                val messageText =
-                    latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
-                        .joinToString(" ") { message -> message.text }
-                "$speakerName: $messageText"
-            },
+            text = textToDisplay,
             color = Color.White,
         )
     }

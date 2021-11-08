@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import edu.gatech.cog.ipglasses.CaptionMessage
@@ -29,20 +30,12 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
             .padding(30.dp)
             .fillMaxSize()
     ) {
-        Text(
+        LimitedText(
             modifier = Modifier.align(Alignment.BottomStart),
+            maxBottomLines = MAX_LINES,
             fontSize = 28.sp,
             text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
-            color = Color.White,
-        )
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .height(320.dp)
-                .background(
-                    Color.Black
-                )
+            color = Color.White
         )
     }
 }
@@ -52,15 +45,18 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
 fun FocusedSpeakerAndGlobalPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_AND_GLOBAL
-    viewModel.addMessage(
-        CaptionMessage(
-            messageId = 0,
-            chunkId = 0,
-            text = "Lorem ipsum dolor sit amet.",
-            speakerId = "juror-a",
-            focusedId = "juror-a"
+    val lipsum = LoremIpsum()
+    for ((i, word) in lipsum.values.first().split(" ").withIndex()) {
+        viewModel.addMessage(
+            CaptionMessage(
+                messageId = 0,
+                chunkId = i,
+                text = word,
+                speakerId = "juror-a",
+                focusedId = "juror-a"
+            )
         )
-    )
+    }
     IPGlassesTheme {
         // A surface container using the 'background' color from the theme
         Surface(
