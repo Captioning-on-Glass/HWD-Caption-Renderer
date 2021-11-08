@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import edu.gatech.cog.ipglasses.CaptionMessage
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
+import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
@@ -27,7 +27,8 @@ fun WhoSaidWhatPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.WHO_SAID_WHAT
     val lipsum = LoremIpsum(1)
-    val jurorIds: List<String> = listOf("juror-a", "juror-b", "juror-c", "jury-foreman")
+    val jurorIds: List<String> =
+        listOf(Speakers.JUROR_A, Speakers.JUROR_B, Speakers.JUROR_C, Speakers.JURY_FOREMAN)
     for ((i, chunk) in lipsum.values.take(4).iterator().withIndex()) {
         viewModel.addMessage(
             CaptionMessage(

@@ -11,6 +11,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerAndGlobalRenderer
 import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerOnlyRenderer
@@ -39,6 +40,13 @@ object Renderers {
     const val FOCUSED_SPEAKER_ONLY = 8 // Show only the caption of the person being focused upon
     const val FOCUSED_SPEAKER_AND_GLOBAL =
         9 // Show the captions of the person being focused upon, with global text.
+}
+
+object Speakers {
+    const val JUROR_A = "juror-a"
+    const val JUROR_B = "juror-b"
+    const val JUROR_C = "juror-c"
+    const val JURY_FOREMAN = "jury-foreman"
 }
 
 
@@ -148,9 +156,9 @@ fun DefaultPreview() {
         CaptionMessage(
             messageId = 0,
             chunkId = 0,
-            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Condimentum id venenatis a condimentum vitae sapien pellentesque habitant morbi. Ac orci phasellus egestas tellus.",
-            speakerId = "juror-a",
-            focusedId = "juror-a"
+            text = LoremIpsum().values.first(),
+            speakerId = Speakers.JUROR_A,
+            focusedId = Speakers.JUROR_A
         )
     )
     IPGlassesTheme {

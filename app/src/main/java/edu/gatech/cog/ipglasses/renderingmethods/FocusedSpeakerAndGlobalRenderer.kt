@@ -1,9 +1,9 @@
 package edu.gatech.cog.ipglasses.renderingmethods
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.sp
 import edu.gatech.cog.ipglasses.CaptionMessage
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
+import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
@@ -52,8 +53,8 @@ fun FocusedSpeakerAndGlobalPreview() {
                 messageId = 0,
                 chunkId = i,
                 text = word,
-                speakerId = "juror-a",
-                focusedId = "juror-a"
+                speakerId = Speakers.JUROR_A,
+                focusedId = Speakers.JUROR_A
             )
         )
     }
