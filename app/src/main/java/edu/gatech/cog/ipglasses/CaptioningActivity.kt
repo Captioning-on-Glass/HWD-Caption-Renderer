@@ -27,19 +27,51 @@ import kotlin.concurrent.thread
 private val TAG = CaptioningActivity::class.java.simpleName
 
 /**
- * List of all the possible renderers.
+ * List of all the possible renderers that the <a href="https://github.com/SaltyQuetzals/cog-group-convo">server</a> can request.
  */
 object Renderers {
-    const val MONITOR_ONLY = 1 // Should do nothing.
-    const val GLOBAL_ONLY = 2 // Show all spoken language as text
-    const val MONITOR_AND_GLOBAL = 3 // Should function identically to GLOBAL_ONLY_RENDERER
+    /**
+     * Show captions only on the computer monitors. Since no display behavior is happening on the
+     * head-worn display, nothing should happen if the renderer is set to this value.
+     */
+    const val MONITOR_ONLY = 1
+
+    /**
+     * Show all spoken language on the head-worn display, regardless of speaker.
+     */
+    const val GLOBAL_ONLY = 2
+
+    /**
+     * Show all spoken language on the head-worn display. Anything dependent on this value should behave
+     * identically to its behavior when [MONITOR_ONLY] is set.
+     */
+    const val MONITOR_AND_GLOBAL = 3
+
+    /**
+     * Show all spoken language on the head-worn display, with indicators to show which direction the speaker is speaking from.
+     */
     const val GLOBAL_WITH_DIRECTION_INDICATORS = 4
-    const val WHO_SAID_WHAT = 5 // Show all spoken language as text while indicating who said what.
-    const val MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS =
-        6 // Should function identically to GLOBAL_WITH_DIRECTION_INDICATORS
-    const val FOCUSED_SPEAKER_ONLY = 8 // Show only the caption of the person being focused upon
-    const val FOCUSED_SPEAKER_AND_GLOBAL =
-        9 // Show the captions of the person being focused upon, with global text.
+
+    /**
+     * Show all spoken language as text on the head-worn display with indicators as to who said what.
+     */
+    const val WHO_SAID_WHAT = 5
+
+    /**
+     * Anything dependent on this value should behave identically to its behavior when [GLOBAL_WITH_DIRECTION_INDICATORS] is set.
+     */
+    const val MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS = 6
+
+    /**
+     * Show only the spoken language of the person being focused upon on the head-worn-display.
+     */
+    const val FOCUSED_SPEAKER_ONLY = 8
+
+    /**
+     * Show the spoken language of the person being focused upon in a primary position on the
+     * head-worn display, but also show all spoken language in a secondary position.
+     */
+    const val FOCUSED_SPEAKER_AND_GLOBAL = 9
 }
 
 object Speakers {
@@ -68,7 +100,6 @@ fun RendererForRequestedMethod(requestedRenderingMethod: Int, model: CaptioningV
                 TAG,
                 "Received unknown renderer value: $requestedRenderingMethod, using FocusedSpeakerOnlyRenderer instead."
             )
-            FocusedSpeakerOnlyRenderer(viewModel = model)
         }
     }
 }
@@ -105,6 +136,10 @@ class CaptioningActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Attempts to create a connection to the given host and port. If successful, begins streaming
+     * data from the server, transforming them into [CaptionMessage]s and adding them to the [CaptioningViewModel].
+     */
     private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
         val gson = Gson()
         thread {

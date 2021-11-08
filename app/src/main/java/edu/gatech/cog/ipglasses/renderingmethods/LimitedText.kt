@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.TextUnit
 import kotlin.math.roundToInt
 
 /**
- * Renders only the `maxBottomLines` lines of a text sequence. For example, if a string occupies
+ * Renders only the maxBottomLines lines of a text sequence. For example, if a string occupies
  * 5 lines of space, and maxBottomLines is set to 3, this composable will show only the last 3 lines
  * of text.
  */
