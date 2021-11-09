@@ -23,7 +23,7 @@ private const val TAG = "GlobalOnlyRenderer"
 
 @Preview(showBackground = false, widthDp = 480, heightDp = 480)
 @Composable
-fun GlobalOnlyRenderer() {
+fun GlobalOnlyPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.GLOBAL_ONLY
     val lipsum = LoremIpsum(1)
@@ -50,7 +50,7 @@ fun GlobalOnlyRenderer() {
 }
 
 /**
- * Renders all spoken text, labeling each chunk with who said what.
+ * Renders all spoken text.
  * @param viewModel: The [CaptioningViewModel] to use as a single source of truth for captions.
  */
 @Composable
