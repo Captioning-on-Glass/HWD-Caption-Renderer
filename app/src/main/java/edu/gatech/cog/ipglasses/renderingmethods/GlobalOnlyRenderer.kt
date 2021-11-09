@@ -56,18 +56,7 @@ fun GlobalOnlyRenderer() {
 @Composable
 fun GlobalOnlyRenderer(viewModel: CaptioningViewModel) {
     val globalCaptionMessages = viewModel.globalCaptionMessages.value
-    val textToDisplay = if (globalCaptionMessages.isEmpty()) {
-        ""
-    } else {
-        val sortedMessagesMap = globalCaptionMessages.groupBy { it.messageId }
-            .toSortedMap() // Group all the captions we have so far by messageId
-        val latestMessage: List<CaptionMessage> =
-            sortedMessagesMap[sortedMessagesMap.lastKey()]!!
-        val messageText =
-            latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
-                .joinToString(" ") { message -> message.text }
-        "$messageText"
-    }
+    val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text }
     Box(
         modifier = Modifier
             .padding(30.dp)
