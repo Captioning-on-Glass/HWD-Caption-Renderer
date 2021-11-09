@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerAndGlobalRenderer
 import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerOnlyRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.GlobalOnlyRenderer
 import edu.gatech.cog.ipglasses.renderingmethods.WhoSaidWhatRenderer
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import java.io.DataInputStream
@@ -90,6 +91,7 @@ fun RendererForRequestedMethod(requestedRenderingMethod: Int, model: CaptioningV
     when (requestedRenderingMethod) {
         Renderers.MONITOR_ONLY -> {
         } // Monitor-only is a no-op, nothing to do
+        Renderers.GLOBAL_ONLY -> GlobalOnlyRenderer(model)
         Renderers.WHO_SAID_WHAT -> WhoSaidWhatRenderer(model)
         Renderers.FOCUSED_SPEAKER_ONLY -> FocusedSpeakerOnlyRenderer(model)
         Renderers.FOCUSED_SPEAKER_AND_GLOBAL -> FocusedSpeakerAndGlobalRenderer(

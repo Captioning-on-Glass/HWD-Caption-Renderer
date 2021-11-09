@@ -27,14 +27,14 @@ fun GlobalOnlyPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.GLOBAL_ONLY
     val lipsum = LoremIpsum(1)
-    for ((i, chunk) in lipsum.values.take(4).iterator().withIndex()) {
+    for ((i, chunk) in lipsum.values.take(10).iterator().withIndex()) {
         viewModel.addMessage(
             CaptionMessage(
                 messageId = i,
                 chunkId = 0,
                 text = chunk,
-                speakerId = "",
-                focusedId = ""
+                speakerId = Speakers.JUROR_A,
+                focusedId = Speakers.JUROR_B
             )
         )
     }
@@ -64,7 +64,7 @@ fun GlobalOnlyRenderer(viewModel: CaptioningViewModel) {
     ) {
         LimitedText(
             modifier = Modifier.align(Alignment.BottomStart),
-            maxBottomLines = 100,
+            maxBottomLines = MAX_LINES,
             fontSize = 28.sp,
             text = textToDisplay,
             color = Color.White,
