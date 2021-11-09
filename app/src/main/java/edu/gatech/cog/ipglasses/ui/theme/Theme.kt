@@ -13,7 +13,7 @@ private val DarkColorPalette = darkColors(
     secondary = Teal200,
     background = Color.Black,
     onPrimary = Color.White,
-    onSurface = Color.White,
+    surface = Color.Black
 )
 
 /* Other default colors to override

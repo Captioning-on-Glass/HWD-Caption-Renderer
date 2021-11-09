@@ -2,12 +2,8 @@ package edu.gatech.cog.ipglasses
 
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import edu.gatech.cog.ipglasses.Renderers.CONTEXTUAL_RENDERER
-import edu.gatech.cog.ipglasses.Renderers.DEFAULT_RENDERER
 
 
 private val TAG = CaptioningViewModel::class.java.simpleName
@@ -69,16 +65,26 @@ class CaptioningViewModel : ViewModel() {
         }
         // To minimize impact on GC/performance, we want to minimize the amount of allocations/deallocations
         // we're doing. We can accomplish this by having the rendering method set ahead of time,
-        // and selectively running non-performant code when necessary.
+        // and running non-performant code when necessary.
         when (renderingMethodToUse) {
-            DEFAULT_RENDERER -> updateCurrentFocusedSpeakerCaptionMessages(captionMessage)
-            CONTEXTUAL_RENDERER -> {
+            Renderers.MONITOR_ONLY -> {
+            } // Monitor-only is a no-op, no need to do anything
+            Renderers.GLOBAL_ONLY -> updateGlobalCaptions(captionMessage)
+            Renderers.MONITOR_AND_GLOBAL -> updateGlobalCaptions(captionMessage)
+            Renderers.GLOBAL_WITH_DIRECTION_INDICATORS -> updateGlobalCaptions(captionMessage)
+            Renderers.WHO_SAID_WHAT -> updateGlobalCaptions(captionMessage)
+            Renderers.MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS -> updateGlobalCaptions(
+                captionMessage
+            )
+            Renderers.FOCUSED_SPEAKER_ONLY -> updateCurrentFocusedSpeakerCaptionMessages(
+                captionMessage
+            )
+            Renderers.FOCUSED_SPEAKER_AND_GLOBAL -> {
                 updateCurrentFocusedSpeakerCaptionMessages(captionMessage)
                 updateGlobalCaptions(captionMessage)
             }
             else -> {
-                // We don't want to break the application if the programmer forgets to set
-                // the rendering method, so I guess we have to run all the intensive code.
+                // We don't want to break the application if the programmer sets the wrong rendering method, so we have to run all the intensive code.
                 updateCurrentFocusedSpeakerCaptionMessages(captionMessage)
                 updateGlobalCaptions(captionMessage)
             }

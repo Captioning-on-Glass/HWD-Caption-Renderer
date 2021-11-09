@@ -7,15 +7,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.gson.Gson
-import edu.gatech.cog.ipglasses.renderingmethods.ContextualRenderer
-import edu.gatech.cog.ipglasses.renderingmethods.DefaultRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerAndGlobalRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.FocusedSpeakerOnlyRenderer
+import edu.gatech.cog.ipglasses.renderingmethods.WhoSaidWhatRenderer
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import java.io.DataInputStream
 import java.io.EOFException
@@ -27,11 +27,81 @@ import kotlin.concurrent.thread
 private val TAG = CaptioningActivity::class.java.simpleName
 
 /**
- * List with the supported renderers available to be requested.
+ * List of all the possible renderers that the <a href="https://github.com/SaltyQuetzals/cog-group-convo">server</a> can request.
  */
 object Renderers {
-    const val DEFAULT_RENDERER = 1
-    const val CONTEXTUAL_RENDERER = 2
+    /**
+     * Show captions only on the computer monitors. Since no display behavior is happening on the
+     * head-worn display, nothing should happen if the renderer is set to this value.
+     */
+    const val MONITOR_ONLY = 1
+
+    /**
+     * Show all spoken language on the head-worn display, regardless of speaker.
+     */
+    const val GLOBAL_ONLY = 2
+
+    /**
+     * Show all spoken language on the head-worn display. Anything dependent on this value should behave
+     * identically to its behavior when [MONITOR_ONLY] is set.
+     */
+    const val MONITOR_AND_GLOBAL = 3
+
+    /**
+     * Show all spoken language on the head-worn display, with indicators to show which direction the speaker is speaking from.
+     */
+    const val GLOBAL_WITH_DIRECTION_INDICATORS = 4
+
+    /**
+     * Show all spoken language as text on the head-worn display with indicators as to who said what.
+     */
+    const val WHO_SAID_WHAT = 5
+
+    /**
+     * Anything dependent on this value should behave identically to its behavior when [GLOBAL_WITH_DIRECTION_INDICATORS] is set.
+     */
+    const val MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS = 6
+
+    /**
+     * Show only the spoken language of the person being focused upon on the head-worn-display.
+     */
+    const val FOCUSED_SPEAKER_ONLY = 8
+
+    /**
+     * Show the spoken language of the person being focused upon in a primary position on the
+     * head-worn display, but also show all spoken language in a secondary position.
+     */
+    const val FOCUSED_SPEAKER_AND_GLOBAL = 9
+}
+
+object Speakers {
+    const val JUROR_A = "juror-a"
+    const val JUROR_B = "juror-b"
+    const val JUROR_C = "juror-c"
+    const val JURY_FOREMAN = "jury-foreman"
+}
+
+
+/**
+ * A map from the requested rendering method to a renderer. If a [Renderers] value is not in this function's `when` statement, it is not supported yet.
+ */
+@Composable
+fun RendererForRequestedMethod(requestedRenderingMethod: Int, model: CaptioningViewModel) {
+    when (requestedRenderingMethod) {
+        Renderers.MONITOR_ONLY -> {
+        } // Monitor-only is a no-op, nothing to do
+        Renderers.WHO_SAID_WHAT -> WhoSaidWhatRenderer(model)
+        Renderers.FOCUSED_SPEAKER_ONLY -> FocusedSpeakerOnlyRenderer(model)
+        Renderers.FOCUSED_SPEAKER_AND_GLOBAL -> FocusedSpeakerAndGlobalRenderer(
+            model
+        )
+        else -> {
+            Log.d(
+                TAG,
+                "Received unknown renderer value: $requestedRenderingMethod, using FocusedSpeakerOnlyRenderer instead."
+            )
+        }
+    }
 }
 
 /**
@@ -45,7 +115,7 @@ class CaptioningActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val requestedRenderingMethod =
-            intent.getIntExtra(RENDERING_METHOD, Renderers.DEFAULT_RENDERER)
+            intent.getIntExtra(RENDERING_METHOD, Renderers.FOCUSED_SPEAKER_ONLY)
         val host = intent.getStringExtra(SERVER_HOST)
         val port = intent.getIntExtra(SERVER_PORT, 0)
         beginStreamingCaptionsFromServer(host, port)
@@ -57,22 +127,19 @@ class CaptioningActivity : ComponentActivity() {
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    when (requestedRenderingMethod) {
-                        Renderers.DEFAULT_RENDERER -> DefaultRenderer(model)
-                        Renderers.CONTEXTUAL_RENDERER -> ContextualRenderer(model)
-                        else -> {
-                            Log.d(
-                                TAG,
-                                "Received unknown renderer value: $requestedRenderingMethod, using DefaultRenderer instead."
-                            )
-                            DefaultRenderer(viewModel = model)
-                        }
-                    }
+                    RendererForRequestedMethod(
+                        requestedRenderingMethod = requestedRenderingMethod,
+                        model = model
+                    )
                 }
             }
         }
     }
 
+    /**
+     * Attempts to create a connection to the given host and port. If successful, begins streaming
+     * data from the server, transforming them into [CaptionMessage]s and adding them to the [CaptioningViewModel].
+     */
     private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
         val gson = Gson()
         thread {
@@ -115,10 +182,29 @@ class CaptioningActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = false, widthDp = 480, heightDp = 480)
 @Composable
 fun DefaultPreview() {
+    val viewModel = CaptioningViewModel()
+    viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
+    viewModel.addMessage(
+        CaptionMessage(
+            messageId = 0,
+            chunkId = 0,
+            text = LoremIpsum().values.first(),
+            speakerId = Speakers.JUROR_A,
+            focusedId = Speakers.JUROR_A
+        )
+    )
     IPGlassesTheme {
-        DefaultRenderer(CaptioningViewModel())
+        // A surface container using the 'background' color from the theme
+        Surface(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            RendererForRequestedMethod(
+                requestedRenderingMethod = viewModel.renderingMethodToUse,
+                model = viewModel
+            )
+        }
     }
 }
