@@ -12,6 +12,7 @@ private val TAG = CaptioningViewModel::class.java.simpleName
  * The [ViewModel] for captions. This ViewModel serves as the single source of truth for what should be rendered on the user's display at any given time.
  */
 class CaptioningViewModel : ViewModel() {
+
     // MutableState is not compatible with mutable objects like ArrayLists: if you modify the
     // ArrayList by mutating it, the UI won't update to match. So we have to do something really
     // dirty to mimic ArrayList functionality: we have to
@@ -26,6 +27,8 @@ class CaptioningViewModel : ViewModel() {
         mutableStateOf(listOf())
     val globalCaptionMessages: MutableState<List<CaptionMessage>> = mutableStateOf(listOf())
     var renderingMethodToUse: Int = -1
+    var currentFocusedId: String? = null
+    var currentSpeakerId: String = Speakers.JURY_FOREMAN
 
     private fun updateCurrentFocusedSpeakerCaptionMessages(captionMessage: CaptionMessage) {
         if (captionMessage.speakerId != captionMessage.focusedId) {
@@ -63,6 +66,8 @@ class CaptioningViewModel : ViewModel() {
             Log.w(TAG, "No rendering method was selected! Discarding this caption.")
             return
         }
+        currentSpeakerId = captionMessage.speakerId
+        currentFocusedId = captionMessage.focusedId
         // To minimize impact on GC/performance, we want to minimize the amount of allocations/deallocations
         // we're doing. We can accomplish this by having the rendering method set ahead of time,
         // and running non-performant code when necessary.

@@ -1,8 +1,6 @@
 package edu.gatech.cog.ipglasses.renderingmethods
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,44 +17,41 @@ import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
-private const val TAG = "GlobalOnlyRenderer"
+private const val TAG = "FocusedSpeakerRenderer"
 
 @Preview(showBackground = false, widthDp = 480, heightDp = 480)
 @Composable
-fun GlobalOnlyPreview() {
+fun FocusedSpeakerPreview() {
     val viewModel = CaptioningViewModel()
-    viewModel.renderingMethodToUse = Renderers.GLOBAL_ONLY
-    val lipsum = LoremIpsum(1)
-    for ((i, chunk) in lipsum.values.take(10).iterator().withIndex()) {
+    viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
+    val lipsum = LoremIpsum()
+    for ((i, word) in lipsum.values.first().split(" ").withIndex()) {
         viewModel.addMessage(
             CaptionMessage(
-                messageId = i,
-                chunkId = 0,
-                text = chunk,
+                messageId = 0,
+                chunkId = i,
+                text = word,
                 speakerId = Speakers.JUROR_A,
-                focusedId = Speakers.JUROR_B
+                focusedId = Speakers.JUROR_A
             )
         )
     }
-
     IPGlassesTheme {
         // A surface container using the 'background' color from the theme
         Surface(
             modifier = Modifier.fillMaxSize()
         ) {
-            GlobalOnlyRenderer(viewModel)
+            FocusedSpeakerRenderer(viewModel)
         }
     }
 }
 
 /**
- * Renders all spoken text.
+ * Renders the currently-focused juror's words in  a primary position.
  * @param viewModel: The [CaptioningViewModel] to use as a single source of truth for captions.
  */
 @Composable
-fun GlobalOnlyRenderer(viewModel: CaptioningViewModel) {
-    val globalCaptionMessages = viewModel.globalCaptionMessages.value
-    val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text }
+fun FocusedSpeakerRenderer(viewModel: CaptioningViewModel) {
     Box(
         modifier = Modifier
             .padding(30.dp)
@@ -66,7 +61,7 @@ fun GlobalOnlyRenderer(viewModel: CaptioningViewModel) {
             modifier = Modifier.align(Alignment.BottomStart),
             maxBottomLines = MAX_LINES,
             fontSize = 28.sp,
-            text = textToDisplay,
+            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
             color = Color.White,
         )
     }

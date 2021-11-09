@@ -8,6 +8,6 @@ data class CaptionMessage(
     @SerializedName("chunk_id") val chunkId: Int,
     val text: String,
     @SerializedName("speaker_id") val speakerId: String,
-    @SerializedName("focused_id") val focusedId: String
+    @SerializedName("focused_id") val focusedId: String?
 
 )
