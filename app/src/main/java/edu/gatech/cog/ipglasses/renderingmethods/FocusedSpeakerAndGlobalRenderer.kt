@@ -21,7 +21,6 @@ import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 /**
  * Renders the currently looked-at juror's captions in a primary position, but also renders a stream of captions in the top right corner.
- * TODO: Create a second text in the top right that shows all the words being spoken. Requires update to captioning server transmission process.
  * @param viewModel: The [CaptioningViewModel] to serve as the single source of truth for this rendering method.
  */
 @Composable
@@ -31,6 +30,13 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
             .padding(30.dp)
             .fillMaxSize()
     ) {
+        LimitedText(
+            modifier = Modifier.align(Alignment.TopEnd).width(240.dp),
+            maxBottomLines = MAX_LINES,
+            fontSize = 24.sp,
+            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
+            color = Color.White,
+        )
         LimitedText(
             modifier = Modifier.align(Alignment.BottomStart),
             maxBottomLines = MAX_LINES,
