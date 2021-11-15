@@ -1,5 +1,6 @@
 package edu.gatech.cog.ipglasses
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -167,20 +168,10 @@ class CaptioningActivity : ComponentActivity() {
                     ) // Transform the JSON string into a CaptionMessage instance
                     model.addMessage(captionMessage = captionMessage)
                 }
-            } catch (e: UnknownHostException) {
-                runOnUiThread {
-                    val toast = Toast.makeText(this, "Unknown host: $host", Toast.LENGTH_LONG)
-                    toast.show()
-                }
-            } catch (e: IOException) {
-                runOnUiThread {
-                    val toast =
-                        Toast.makeText(this, "I/O Exception: ${e.message}", Toast.LENGTH_LONG)
-                    toast.show()
-                }
-            } catch (e: EOFException) {
-                // This is a result of the server getting forcefully shut down.
-                // TODO: figure out how to handle this more gracefully. Ideally, we'd close the socket connection from the server side.
+            } catch (e: Exception) {
+                val intent = Intent(this, MainActivity::class.java)
+                Log.e(TAG, e.message!!)
+                startActivity(intent)
             }
         }
     }
