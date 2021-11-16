@@ -2,6 +2,7 @@ package edu.gatech.cog.ipglasses.renderingmethods
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -26,8 +27,8 @@ private const val TAG = "GlobalRenderer"
 fun GlobalPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.GLOBAL_ONLY
-    val lipsum = LoremIpsum(1)
-    for ((i, chunk) in lipsum.values.take(10).iterator().withIndex()) {
+    val lipsum = LoremIpsum()
+    for ((i, chunk) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
         viewModel.addMessage(
             CaptionMessage(
                 messageId = i,
@@ -59,15 +60,12 @@ fun GlobalRenderer(viewModel: CaptioningViewModel) {
     val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text }
     Box(
         modifier = Modifier
-            .padding(30.dp)
             .fillMaxSize()
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart),
+            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            fontSize = 28.sp,
             text = textToDisplay,
-            color = Color.White,
         )
     }
 }

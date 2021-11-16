@@ -1,9 +1,6 @@
 package edu.gatech.cog.ipglasses.renderingmethods
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +15,7 @@ import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import edu.gatech.cog.ipglasses.ui.theme.Typography
 
 
 /**
@@ -28,22 +26,19 @@ import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
     Box(
         modifier = Modifier
-            .padding(30.dp)
             .fillMaxSize()
     ) {
         LimitedText(
             modifier = Modifier.align(Alignment.TopEnd).width(240.dp),
             maxBottomLines = MAX_LINES,
-            fontSize = 24.sp,
             text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
-            color = Color.White,
+            style= Typography.body2
         )
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart),
+            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            fontSize = 28.sp,
             text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
-            color = Color.White
+            style = Typography.body1
         )
     }
 }
@@ -54,7 +49,7 @@ fun FocusedSpeakerAndGlobalPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_AND_GLOBAL
     val lipsum = LoremIpsum()
-    for ((i, word) in lipsum.values.first().split(" ").withIndex()) {
+    for ((i, word) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
         viewModel.addMessage(
             CaptionMessage(
                 messageId = 0,

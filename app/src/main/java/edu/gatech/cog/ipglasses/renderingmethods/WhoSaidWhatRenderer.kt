@@ -2,6 +2,7 @@ package edu.gatech.cog.ipglasses.renderingmethods
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
@@ -26,7 +27,7 @@ private const val TAG = "WhoSaidWhatRenderer"
 fun WhoSaidWhatPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.WHO_SAID_WHAT
-    val lipsum = LoremIpsum(1)
+    val lipsum = LoremIpsum(10)
     val jurorIds: List<String> =
         listOf(Speakers.JUROR_A, Speakers.JUROR_B, Speakers.JUROR_C, Speakers.JURY_FOREMAN)
     for ((i, chunk) in lipsum.values.take(4).iterator().withIndex()) {
@@ -67,22 +68,18 @@ fun WhoSaidWhatRenderer(viewModel: CaptioningViewModel) {
             sortedMessagesMap[sortedMessagesMap.lastKey()]!!
         val speakerName = latestMessage.first().speakerId.split("-")
             .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
-        val messageText =
-            latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
-                .joinToString(" ") { message -> message.text }
-        "$speakerName: $messageText"
+        latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
+                .joinToString(" ", prefix="$speakerName: ") { message -> message.text }
+
     }
     Box(
         modifier = Modifier
-            .padding(30.dp)
             .fillMaxSize()
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart),
-            maxBottomLines = 100,
-            fontSize = 28.sp,
+            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
+            maxBottomLines = MAX_LINES,
             text = textToDisplay,
-            color = Color.White,
         )
     }
 }

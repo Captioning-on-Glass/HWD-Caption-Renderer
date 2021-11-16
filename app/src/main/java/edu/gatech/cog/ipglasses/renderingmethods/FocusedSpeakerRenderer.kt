@@ -15,6 +15,7 @@ import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import edu.gatech.cog.ipglasses.ui.theme.Typography
 
 
 private const val TAG = "FocusedSpeakerRenderer"
@@ -25,7 +26,7 @@ fun FocusedSpeakerPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
     val lipsum = LoremIpsum()
-    for ((i, word) in lipsum.values.first().split(" ").withIndex()) {
+    for ((i, word) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
         viewModel.addMessage(
             CaptionMessage(
                 messageId = 0,
@@ -53,16 +54,12 @@ fun FocusedSpeakerPreview() {
 @Composable
 fun FocusedSpeakerRenderer(viewModel: CaptioningViewModel) {
     Box(
-        modifier = Modifier
-            .padding(30.dp)
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart),
+            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            fontSize = 28.sp,
             text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
-            color = Color.White,
         )
     }
 }

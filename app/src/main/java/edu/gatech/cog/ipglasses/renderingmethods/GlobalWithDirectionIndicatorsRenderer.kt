@@ -15,6 +15,7 @@ import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import edu.gatech.cog.ipglasses.ui.theme.Typography
 
 
 private const val TAG = "GlobalWithDirectionIndicatorsRenderer"
@@ -25,7 +26,7 @@ fun GlobalWithDirectionIndicatorsPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.GLOBAL_WITH_DIRECTION_INDICATORS
     val lipsum = LoremIpsum()
-    for ((i, word) in lipsum.values.first().split(" ").withIndex()) {
+    for ((i, word) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
         viewModel.addMessage(
             CaptionMessage(
                 messageId = 0,
@@ -55,15 +56,13 @@ fun GlobalWithDirectionIndicatorsPreview() {
 fun GlobalWithDirectionIndicatorsRenderer(viewModel: CaptioningViewModel) {
     Box(
         modifier = Modifier
-            .padding(30.dp)
             .fillMaxSize()
     ) {
         LimitedText(
             modifier = Modifier.align(Alignment.TopEnd).width(240.dp),
             maxBottomLines = MAX_LINES,
-            fontSize = 24.sp,
             text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
-            color = Color.White,
+            style = Typography.body2
         )
         Box(modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart)) {
             Indicators(
