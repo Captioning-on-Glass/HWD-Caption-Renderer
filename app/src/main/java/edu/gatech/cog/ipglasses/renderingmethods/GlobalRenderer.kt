@@ -1,9 +1,6 @@
 package edu.gatech.cog.ipglasses.renderingmethods
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -60,10 +57,13 @@ fun GlobalRenderer(viewModel: CaptioningViewModel) {
     val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text }
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .width(480.dp)
+            .height(480.dp)
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
             text = textToDisplay,
         )

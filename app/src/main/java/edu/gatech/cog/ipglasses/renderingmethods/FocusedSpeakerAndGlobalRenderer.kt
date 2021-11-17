@@ -26,16 +26,21 @@ import edu.gatech.cog.ipglasses.ui.theme.Typography
 fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .width(480.dp)
+            .height(480.dp)
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.TopEnd).width(240.dp),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .width(240.dp),
             maxBottomLines = MAX_LINES,
             text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
-            style= Typography.body2
+            style = Typography.body2
         )
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
             text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
             style = Typography.body1

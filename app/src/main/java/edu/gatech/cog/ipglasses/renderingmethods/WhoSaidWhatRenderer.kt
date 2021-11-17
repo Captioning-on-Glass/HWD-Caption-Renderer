@@ -1,9 +1,6 @@
 package edu.gatech.cog.ipglasses.renderingmethods
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -69,15 +66,18 @@ fun WhoSaidWhatRenderer(viewModel: CaptioningViewModel) {
         val speakerName = latestMessage.first().speakerId.split("-")
             .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
         latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
-                .joinToString(" ", prefix="$speakerName: ") { message -> message.text }
+            .joinToString(" ", prefix = "$speakerName: ") { message -> message.text }
 
     }
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .width(480.dp)
+            .height(480.dp)
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
             text = textToDisplay,
         )

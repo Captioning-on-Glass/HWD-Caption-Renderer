@@ -54,10 +54,14 @@ fun FocusedSpeakerPreview() {
 @Composable
 fun FocusedSpeakerRenderer(viewModel: CaptioningViewModel) {
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .width(480.dp)
+            .height(480.dp)
     ) {
         LimitedText(
-            modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
             text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
         )
