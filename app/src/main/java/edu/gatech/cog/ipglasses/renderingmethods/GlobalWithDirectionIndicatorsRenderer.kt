@@ -59,21 +59,21 @@ fun GlobalWithDirectionIndicatorsRenderer(viewModel: CaptioningViewModel) {
             .width(480.dp)
             .height(480.dp)
     ) {
-        LimitedText(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .width(240.dp),
-            maxBottomLines = MAX_LINES,
-            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
-            style = Typography.body2
-        )
         Box(modifier = Modifier
             .fillMaxWidth()
-            .align(Alignment.BottomStart)) {
+            .align(Alignment.BottomStart).padding(bottom=55.dp)) {
             Indicators(
                 viewModel.currentFocusedId,
                 viewModel.currentSpeakerId
             )
         }
+        LimitedText(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth(),
+            maxBottomLines = MAX_LINES,
+            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
+            style = Typography.body2
+        )
     }
 }
