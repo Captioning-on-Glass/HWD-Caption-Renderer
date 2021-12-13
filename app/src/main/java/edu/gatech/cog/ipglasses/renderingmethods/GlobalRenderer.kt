@@ -19,7 +19,7 @@ import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 private const val TAG = "GlobalRenderer"
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun GlobalPreview() {
     val viewModel = CaptioningViewModel()
@@ -56,14 +56,12 @@ fun GlobalRenderer(viewModel: CaptioningViewModel) {
     val globalCaptionMessages = viewModel.globalCaptionMessages.value
     val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text }
     Box(
-        modifier = Modifier
-            .width(480.dp)
-            .height(480.dp)
+        modifier = Modifier.fillMaxHeight().fillMaxWidth(0.8f)
     ) {
         LimitedText(
             modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(),
+                .align(Alignment.BottomEnd)
+                .fillMaxWidth(0.8f),
             maxBottomLines = MAX_LINES,
             text = textToDisplay,
         )

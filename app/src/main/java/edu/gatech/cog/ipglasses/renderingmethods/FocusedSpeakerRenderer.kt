@@ -20,7 +20,7 @@ import edu.gatech.cog.ipglasses.ui.theme.Typography
 
 private const val TAG = "FocusedSpeakerRenderer"
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun FocusedSpeakerPreview() {
     val viewModel = CaptioningViewModel()

@@ -20,7 +20,7 @@ val JURORS_MAP = mapOf(
     Speakers.JURY_FOREMAN to 3
 )
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun IndicatorsPreview() {
     val focusedSpeaker = Speakers.JUROR_C

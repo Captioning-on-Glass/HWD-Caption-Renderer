@@ -19,7 +19,7 @@ import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 private const val TAG = "WhoSaidWhatRenderer"
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun WhoSaidWhatPreview() {
     val viewModel = CaptioningViewModel()

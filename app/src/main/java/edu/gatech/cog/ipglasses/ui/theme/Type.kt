@@ -12,13 +12,13 @@ val Typography = Typography(
     body1 = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
+        fontSize = 36.sp,
         color = Color.Green
     ),
     body2 = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
+        fontSize = 32.sp,
         color = Color.Green
     )
     /* Other default text styles to override

@@ -3,6 +3,7 @@ package edu.gatech.cog.ipglasses
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -119,6 +120,7 @@ class CaptioningActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val requestedRenderingMethod =
             intent.getIntExtra(RENDERING_METHOD, Renderers.FOCUSED_SPEAKER_ONLY)
         val host = intent.getStringExtra(SERVER_HOST)
@@ -177,7 +179,7 @@ class CaptioningActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun DefaultPreview() {
     val viewModel = CaptioningViewModel()

@@ -48,7 +48,7 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
     }
 }
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun FocusedSpeakerAndGlobalPreview() {
     val viewModel = CaptioningViewModel()

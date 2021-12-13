@@ -20,7 +20,7 @@ import edu.gatech.cog.ipglasses.ui.theme.Typography
 
 private const val TAG = "GlobalWithDirectionIndicatorsRenderer"
 
-@Preview(showBackground = false, widthDp = 480, heightDp = 480)
+@Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun GlobalWithDirectionIndicatorsPreview() {
     val viewModel = CaptioningViewModel()
@@ -55,13 +55,11 @@ fun GlobalWithDirectionIndicatorsPreview() {
 @Composable
 fun GlobalWithDirectionIndicatorsRenderer(viewModel: CaptioningViewModel) {
     Box(
-        modifier = Modifier
-            .width(480.dp)
-            .height(480.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         Box(modifier = Modifier
-            .fillMaxWidth()
-            .align(Alignment.BottomStart).padding(bottom=55.dp)) {
+            .fillMaxWidth(0.8f)
+            .align(Alignment.BottomEnd).padding(bottom=55.dp)) {
             Indicators(
                 viewModel.currentFocusedId,
                 viewModel.currentSpeakerId
@@ -69,11 +67,10 @@ fun GlobalWithDirectionIndicatorsRenderer(viewModel: CaptioningViewModel) {
         }
         LimitedText(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth(),
+                .align(Alignment.BottomEnd)
+                .fillMaxWidth(0.8f),
             maxBottomLines = MAX_LINES,
             text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
-            style = Typography.body2
         )
     }
 }

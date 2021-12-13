@@ -2,6 +2,7 @@ package edu.gatech.cog.ipglasses
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.zxing.integration.android.IntentIntegrator
