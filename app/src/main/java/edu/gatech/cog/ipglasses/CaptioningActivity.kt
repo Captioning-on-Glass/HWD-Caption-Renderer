@@ -21,7 +21,10 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import kotlinx.coroutines.delay
 import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.lang.Thread.sleep
 import java.net.Socket
 import kotlin.concurrent.thread
 
@@ -125,6 +128,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private val orientationAngles = FloatArray(3)
 
     private val model: CaptioningViewModel by viewModels()
+    private lateinit var socket: Socket
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -167,7 +171,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             sensorManager.registerListener(
                 this,
                 accelerometer,
-                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_NORMAL,
                 SensorManager.SENSOR_DELAY_UI
             )
         }
@@ -175,7 +179,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             sensorManager.registerListener(
                 this,
                 magneticField,
-                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_NORMAL,
                 SensorManager.SENSOR_DELAY_UI
             )
         }
@@ -188,34 +192,55 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
+    private fun streamCaptionsFromServer(socket: Socket) {
+        val gson = Gson()
+        while (socket.isConnected) {
+            val messageInputStream = DataInputStream(socket.getInputStream())
+            val messageLength =
+                messageInputStream.readInt() // Read the length of the upcoming message (in bytes)
+            val messageByteArray =
+                ByteArray(messageLength) // Allocate a byte array of the given message length
+            messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
+            val messageAsJsonString =
+                String(messageByteArray) // Convert the array into a JSON string
+            val captionMessage = gson.fromJson(
+                messageAsJsonString,
+                CaptionMessage::class.java
+            ) // Transform the JSON string into a CaptionMessage instance
+            model.addMessage(captionMessage = captionMessage)
+        }
+    }
 
+    private fun streamOrientationToServer(socket: Socket) {
+        try {
+            while (socket.isConnected) {
+                val messageOutputStream = DataOutputStream(socket.getOutputStream())
+                messageOutputStream.writeFloat(orientationAngles[0])
+                messageOutputStream.writeFloat(orientationAngles[1])
+                messageOutputStream.writeFloat(orientationAngles[2])
+                sleep(1000)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, e.stackTraceToString())
+        }
+    }
 
     /**
      * Attempts to create a connection to the given host and port. If successful, begins streaming
      * data from the server, transforming them into [CaptionMessage]s and adding them to the [CaptioningViewModel].
      */
     private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
-        val gson = Gson()
         thread {
             try {
                 val socket = Socket(
                     host,
                     port
                 ) // Connect to captioning server, blocks thread until successful or errors.
-                while (socket.isConnected) {
-                    val messageInputStream = DataInputStream(socket.getInputStream())
-                    val messageLength =
-                        messageInputStream.readInt() // Read the length of the upcoming message (in bytes)
-                    val messageByteArray =
-                        ByteArray(messageLength) // Allocate a byte array of the given message length
-                    messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
-                    val messageAsJsonString =
-                        String(messageByteArray) // Convert the array into a JSON string
-                    val captionMessage = gson.fromJson(
-                        messageAsJsonString,
-                        CaptionMessage::class.java
-                    ) // Transform the JSON string into a CaptionMessage instance
-                    model.addMessage(captionMessage = captionMessage)
+                thread {
+                    streamCaptionsFromServer(socket)
+                }
+                thread {
+                    streamOrientationToServer(socket)
                 }
             } catch (e: Exception) {
                 val intent = Intent(this, MainActivity::class.java)
