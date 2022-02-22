@@ -212,13 +212,16 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     }
 
     private fun streamOrientationToServer(socket: Socket) {
+        val gson = Gson()
         try {
             while (socket.isConnected) {
                 val messageOutputStream = DataOutputStream(socket.getOutputStream())
-                messageOutputStream.writeFloat(orientationAngles[0])
-                messageOutputStream.writeFloat(orientationAngles[1])
-                messageOutputStream.writeFloat(orientationAngles[2])
-                sleep(1000)
+                val orientationMessage = OrientationMessage(azimuth=orientationAngles[0], pitch=orientationAngles[1], roll=orientationAngles[2])
+                val messageAsJsonString = gson.toJson(orientationMessage, OrientationMessage::class.java)
+                val messageByteArray = messageAsJsonString.toByteArray()
+                val messageLength = messageByteArray.size
+                messageOutputStream.writeInt(messageLength)
+                messageOutputStream.write(messageByteArray)
             }
         } catch (e: Exception) {
             Log.e(TAG, e.stackTraceToString())
