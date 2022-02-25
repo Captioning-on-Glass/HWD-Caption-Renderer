@@ -10,10 +10,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import edu.gatech.cog.ipglasses.CaptionMessage
+import com.google.flatbuffers.FlatBufferBuilder
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
+import edu.gatech.cog.ipglasses.cog.CaptionMessage
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import edu.gatech.cog.ipglasses.ui.theme.Typography
 
@@ -34,7 +35,7 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.TopEnd)
                 .width(240.dp),
             maxBottomLines = MAX_LINES,
-            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text },
+            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text() },
             style = Typography.body2
         )
         LimitedText(
@@ -42,7 +43,7 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
+            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text() },
             style = Typography.body1
         )
     }
@@ -55,14 +56,16 @@ fun FocusedSpeakerAndGlobalPreview() {
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_AND_GLOBAL
     val lipsum = LoremIpsum()
     for ((i, word) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
+        val builder = FlatBufferBuilder(1024)
+        val text = builder.createString(word)
+        val speakerId = builder.createString(Speakers.JUROR_A)
+        val focusedId = builder.createString(Speakers.JUROR_A)
+        val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, 0, i)
+        builder.finish(captionMessageOffset)
+        val buf = builder.dataBuffer()
+        val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)
         viewModel.addMessage(
-            CaptionMessage(
-                messageId = 0,
-                chunkId = i,
-                text = word,
-                speakerId = Speakers.JUROR_A,
-                focusedId = Speakers.JUROR_A
-            )
+            captionMessage = captionMessage
         )
     }
     IPGlassesTheme {

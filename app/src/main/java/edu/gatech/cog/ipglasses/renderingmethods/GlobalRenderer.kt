@@ -10,10 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
-import edu.gatech.cog.ipglasses.CaptionMessage
+import com.google.flatbuffers.FlatBufferBuilder
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
+import edu.gatech.cog.ipglasses.cog.CaptionMessage
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
@@ -25,15 +26,18 @@ fun GlobalPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.GLOBAL_ONLY
     val lipsum = LoremIpsum()
+
     for ((i, chunk) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
+        val builder = FlatBufferBuilder(1024)
+        val text = builder.createString(chunk)
+        val speakerId = builder.createString(Speakers.JUROR_A)
+        val focusedId = builder.createString(Speakers.JUROR_B)
+        val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, i, 0)
+        builder.finish(captionMessageOffset)
+        val buf = builder.dataBuffer()
+        val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)
         viewModel.addMessage(
-            CaptionMessage(
-                messageId = i,
-                chunkId = 0,
-                text = chunk,
-                speakerId = Speakers.JUROR_A,
-                focusedId = Speakers.JUROR_B
-            )
+            captionMessage
         )
     }
 
@@ -54,7 +58,7 @@ fun GlobalPreview() {
 @Composable
 fun GlobalRenderer(viewModel: CaptioningViewModel) {
     val globalCaptionMessages = viewModel.globalCaptionMessages.value
-    val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text }
+    val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text() }
     Box(
         modifier = Modifier.fillMaxHeight().fillMaxWidth(0.8f)
     ) {

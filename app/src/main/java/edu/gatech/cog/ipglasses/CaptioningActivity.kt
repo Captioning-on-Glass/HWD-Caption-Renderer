@@ -18,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
+import com.google.flatbuffers.FlatBufferBuilder
 import com.google.gson.Gson
+import edu.gatech.cog.ipglasses.cog.CaptionMessage
+import edu.gatech.cog.ipglasses.cog.OrientationMessage
 import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import kotlinx.coroutines.delay
@@ -26,6 +29,7 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.lang.Thread.sleep
 import java.net.Socket
+import java.nio.ByteBuffer
 import kotlin.concurrent.thread
 
 private val TAG = CaptioningActivity::class.java.simpleName
@@ -193,35 +197,32 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     }
 
     private fun streamCaptionsFromServer(socket: Socket) {
-        val gson = Gson()
         while (socket.isConnected) {
             val messageInputStream = DataInputStream(socket.getInputStream())
             val messageLength =
                 messageInputStream.readInt() // Read the length of the upcoming message (in bytes)
+            Log.d(TAG, "messageLength = $messageLength")
             val messageByteArray =
                 ByteArray(messageLength) // Allocate a byte array of the given message length
             messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
-            val messageAsJsonString =
-                String(messageByteArray) // Convert the array into a JSON string
-            val captionMessage = gson.fromJson(
-                messageAsJsonString,
-                CaptionMessage::class.java
-            ) // Transform the JSON string into a CaptionMessage instance
+            val captionMessage: CaptionMessage = CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
+            Log.d(TAG, "messageId = ${captionMessage.messageId()}, chunkId = ${captionMessage.chunkId()}")
+            Log.d(TAG,"text = ${captionMessage.text()}")
             model.addMessage(captionMessage = captionMessage)
         }
     }
 
     private fun streamOrientationToServer(socket: Socket) {
-        val gson = Gson()
+        val builder = FlatBufferBuilder(1024)
         try {
             while (socket.isConnected) {
                 val messageOutputStream = DataOutputStream(socket.getOutputStream())
-                val orientationMessage = OrientationMessage(azimuth=orientationAngles[0], pitch=orientationAngles[1], roll=orientationAngles[2])
-                val messageAsJsonString = gson.toJson(orientationMessage, OrientationMessage::class.java)
-                val messageByteArray = messageAsJsonString.toByteArray()
-                val messageLength = messageByteArray.size
+                val orientationMessage = OrientationMessage.createOrientationMessage(builder, orientationAngles[0], orientationAngles[1], orientationAngles[2])
+                builder.finish(orientationMessage)
+                val buf = builder.sizedByteArray()
+                val messageLength = buf.size
                 messageOutputStream.writeInt(messageLength)
-                messageOutputStream.write(messageByteArray)
+                messageOutputStream.write(buf)
             }
         } catch (e: Exception) {
             Log.e(TAG, e.stackTraceToString())
@@ -289,14 +290,17 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 fun DefaultPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
+    val builder = FlatBufferBuilder(1024)
+    val text = builder.createString(LoremIpsum().values.first())
+    val speakerId = builder.createString(Speakers.JUROR_A)
+    val focusedId = builder.createString(Speakers.JUROR_A)
+    val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, 0, 0)
+    builder.finish(captionMessageOffset)
+    val buf = builder.dataBuffer()
+    val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)
+
     viewModel.addMessage(
-        CaptionMessage(
-            messageId = 0,
-            chunkId = 0,
-            text = LoremIpsum().values.first(),
-            speakerId = Speakers.JUROR_A,
-            focusedId = Speakers.JUROR_A
-        )
+        captionMessage
     )
     IPGlassesTheme {
         // A surface container using the 'background' color from the theme

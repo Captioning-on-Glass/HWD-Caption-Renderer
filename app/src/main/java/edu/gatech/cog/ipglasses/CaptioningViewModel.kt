@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import edu.gatech.cog.ipglasses.cog.CaptionMessage
 
 
 private val TAG = CaptioningViewModel::class.java.simpleName
@@ -31,7 +32,7 @@ class CaptioningViewModel : ViewModel() {
     var currentSpeakerId: String = Speakers.JURY_FOREMAN
 
     private fun updateCurrentFocusedSpeakerCaptionMessages(captionMessage: CaptionMessage) {
-        if (captionMessage.speakerId != captionMessage.focusedId) {
+        if (captionMessage.speakerId() != captionMessage.focusedId()) {
             // The speaker isn't being focused by the participant. Clear the list.
             currentFocusedSpeakerCaptionMessages.value = listOf()
             return
@@ -40,7 +41,7 @@ class CaptioningViewModel : ViewModel() {
             currentFocusedSpeakerCaptionMessages.value += listOf(captionMessage)
             return
         } else {
-            if (captionMessage.speakerId != currentFocusedSpeakerCaptionMessages.value[0].speakerId) {
+            if (captionMessage.speakerId() != currentFocusedSpeakerCaptionMessages.value[0].speakerId()) {
                 // If the speaker has changed but the participant is focusing on the new speaker,
                 // we need to reset the list to one element.
                 currentFocusedSpeakerCaptionMessages.value = listOf(captionMessage)
@@ -56,7 +57,7 @@ class CaptioningViewModel : ViewModel() {
         // (messageId, chunkId), this is a duplicate caption (caused by, say, the participant
         // looking away and back really quickly) and we don't want to add it to our
         // "global captions" list.
-        if (globalCaptionMessages.value.none { it.messageId == captionMessage.messageId && it.chunkId == captionMessage.chunkId }) {
+        if (globalCaptionMessages.value.none { it.messageId() == captionMessage.messageId() && it.chunkId() == captionMessage.chunkId() }) {
             globalCaptionMessages.value += listOf(captionMessage)
         }
     }
@@ -66,8 +67,8 @@ class CaptioningViewModel : ViewModel() {
             Log.w(TAG, "No rendering method was selected! Discarding this caption.")
             return
         }
-        currentSpeakerId = captionMessage.speakerId
-        currentFocusedId = captionMessage.focusedId
+        currentSpeakerId = captionMessage.speakerId()
+        currentFocusedId = captionMessage.focusedId()
         // To minimize impact on GC/performance, we want to minimize the amount of allocations/deallocations
         // we're doing. We can accomplish this by having the rendering method set ahead of time,
         // and running non-performant code when necessary.

@@ -5,17 +5,15 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import edu.gatech.cog.ipglasses.CaptionMessage
+import com.google.flatbuffers.FlatBufferBuilder
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
+import edu.gatech.cog.ipglasses.cog.CaptionMessage
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
-import edu.gatech.cog.ipglasses.ui.theme.Typography
 
 
 private const val TAG = "FocusedSpeakerRenderer"
@@ -26,15 +24,18 @@ fun FocusedSpeakerPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
     val lipsum = LoremIpsum()
+
     for ((i, word) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
+        val builder = FlatBufferBuilder(1024)
+        val text = builder.createString(word)
+        val speakerId = builder.createString(Speakers.JUROR_A)
+        val focusedId = builder.createString(Speakers.JUROR_A)
+        val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, 0, i)
+        builder.finish(captionMessageOffset)
+        val buf = builder.dataBuffer()
+        val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)
         viewModel.addMessage(
-            CaptionMessage(
-                messageId = 0,
-                chunkId = i,
-                text = word,
-                speakerId = Speakers.JUROR_A,
-                focusedId = Speakers.JUROR_A
-            )
+captionMessage
         )
     }
     IPGlassesTheme {
@@ -63,7 +64,7 @@ fun FocusedSpeakerRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text },
+            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text() },
         )
     }
 }
