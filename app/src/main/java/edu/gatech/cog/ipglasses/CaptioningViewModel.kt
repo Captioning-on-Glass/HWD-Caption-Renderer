@@ -5,6 +5,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import edu.gatech.cog.ipglasses.cog.CaptionMessage
+import edu.gatech.cog.ipglasses.cog.Juror
 
 
 private val TAG = CaptioningViewModel::class.java.simpleName
@@ -28,8 +29,8 @@ class CaptioningViewModel : ViewModel() {
         mutableStateOf(listOf())
     val globalCaptionMessages: MutableState<List<CaptionMessage>> = mutableStateOf(listOf())
     var renderingMethodToUse: Int = -1
-    var currentFocusedId: String? = null
-    var currentSpeakerId: String = Speakers.JURY_FOREMAN
+    var currentFocusedId: Byte? = null
+    var currentSpeakerId: Byte = Juror.JuryForeman
 
     private fun updateCurrentFocusedSpeakerCaptionMessages(captionMessage: CaptionMessage) {
         if (captionMessage.speakerId() != captionMessage.focusedId()) {

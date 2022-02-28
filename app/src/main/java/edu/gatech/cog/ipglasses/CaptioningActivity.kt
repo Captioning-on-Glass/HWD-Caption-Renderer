@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.flatbuffers.FlatBufferBuilder
 import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.cog.CaptionMessage
+import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.cog.OrientationMessage
 import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
@@ -199,11 +200,8 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private fun streamCaptionsFromServer(socket: Socket) {
         while (socket.isConnected) {
             val messageInputStream = DataInputStream(socket.getInputStream())
-            val messageLength =
-                messageInputStream.readInt() // Read the length of the upcoming message (in bytes)
-            Log.d(TAG, "messageLength = $messageLength")
             val messageByteArray =
-                ByteArray(messageLength) // Allocate a byte array of the given message length
+                ByteArray(1024) // Allocate a byte array of the given message length
             messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
             val captionMessage: CaptionMessage = CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
             Log.d(TAG, "messageId = ${captionMessage.messageId()}, chunkId = ${captionMessage.chunkId()}")
@@ -220,8 +218,6 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 val orientationMessage = OrientationMessage.createOrientationMessage(builder, orientationAngles[0], orientationAngles[1], orientationAngles[2])
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
-                val messageLength = buf.size
-                messageOutputStream.writeInt(messageLength)
                 messageOutputStream.write(buf)
             }
         } catch (e: Exception) {
@@ -292,9 +288,7 @@ fun DefaultPreview() {
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
     val builder = FlatBufferBuilder(1024)
     val text = builder.createString(LoremIpsum().values.first())
-    val speakerId = builder.createString(Speakers.JUROR_A)
-    val focusedId = builder.createString(Speakers.JUROR_A)
-    val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, 0, 0)
+    val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, Juror.JurorA, Juror.JurorA, 0, 0)
     builder.finish(captionMessageOffset)
     val buf = builder.dataBuffer()
     val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)

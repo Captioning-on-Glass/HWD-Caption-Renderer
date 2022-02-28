@@ -11,20 +11,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import edu.gatech.cog.ipglasses.R
 import edu.gatech.cog.ipglasses.Speakers
+import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 val JURORS_MAP = mapOf(
-    Speakers.JUROR_C to 0,
-    Speakers.JUROR_B to 1,
-    Speakers.JUROR_A to 2,
-    Speakers.JURY_FOREMAN to 3
+    Juror.JurorA to 0,
+    Juror.JurorB to 1,
+    Juror.JurorC to 2,
+    Juror.JuryForeman to 3
 )
 
 @Preview(showBackground = false, widthDp = DISPLAY_WIDTH, heightDp = DISPLAY_HEIGHT)
 @Composable
 fun IndicatorsPreview() {
-    val focusedSpeaker = Speakers.JUROR_C
-    val currentSpeaker = Speakers.JURY_FOREMAN
+    val focusedSpeaker = Juror.JurorC
+    val currentSpeaker = Juror.JuryForeman
     IPGlassesTheme {
         // A surface container using the 'background' color from the theme
         Surface(
@@ -36,7 +37,7 @@ fun IndicatorsPreview() {
 }
 
 @Composable
-fun Indicators(focusedSpeaker: String?, currentSpeaker: String) {
+fun Indicators(focusedSpeaker: Byte?, currentSpeaker: Byte) {
     if (focusedSpeaker == null) {
         return
     }

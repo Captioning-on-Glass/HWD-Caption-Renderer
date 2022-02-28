@@ -13,6 +13,7 @@ import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.cog.CaptionMessage
+import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
@@ -24,13 +25,13 @@ fun WhoSaidWhatPreview() {
     val viewModel = CaptioningViewModel()
     viewModel.renderingMethodToUse = Renderers.WHO_SAID_WHAT
     val lipsum = LoremIpsum(10)
-    val jurorIds: List<String> =
-        listOf(Speakers.JUROR_A, Speakers.JUROR_B, Speakers.JUROR_C, Speakers.JURY_FOREMAN)
+    val jurorIds: List<Byte> =
+        listOf(Juror.JurorA, Juror.JurorB, Juror.JurorC, Juror.JuryForeman)
     for ((i, chunk) in lipsum.values.take(4).iterator().withIndex()) {
         val builder = FlatBufferBuilder(1024)
         val text = builder.createString(chunk)
-        val speakerId = builder.createString(jurorIds[i])
-        val focusedId = builder.createString(jurorIds[i])
+        val speakerId = jurorIds[i]
+        val focusedId = jurorIds[i]
         val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, i, 0)
         builder.finish(captionMessageOffset)
         val buf = builder.dataBuffer()
@@ -64,8 +65,13 @@ fun WhoSaidWhatRenderer(viewModel: CaptioningViewModel) {
             .toSortedMap() // Group all the captions we have so far by messageId
         val latestMessage: List<CaptionMessage> =
             sortedMessagesMap[sortedMessagesMap.lastKey()]!!
-        val speakerName = latestMessage.first().speakerId().split("-")
-            .joinToString(" ") { word -> word.replaceFirstChar { it.uppercase() } }
+        val speakerName = when (latestMessage.first().speakerId()) {
+            Juror.JurorA -> "Juror A"
+            Juror.JurorB -> "Juror B"
+            Juror.JurorC -> "Juror C"
+            Juror.JuryForeman -> "Jury Foreman"
+            else -> ""
+        }
         latestMessage.sortedBy { captionMessage -> captionMessage.chunkId() }
             .joinToString(" ", prefix = "$speakerName: ") { message -> message.text() }
 

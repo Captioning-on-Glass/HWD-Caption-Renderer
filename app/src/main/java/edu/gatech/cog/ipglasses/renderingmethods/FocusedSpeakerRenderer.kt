@@ -13,6 +13,7 @@ import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
 import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.cog.CaptionMessage
+import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 
 
@@ -28,9 +29,7 @@ fun FocusedSpeakerPreview() {
     for ((i, word) in lipsum.values.first().split("\\s+".toRegex()).withIndex()) {
         val builder = FlatBufferBuilder(1024)
         val text = builder.createString(word)
-        val speakerId = builder.createString(Speakers.JUROR_A)
-        val focusedId = builder.createString(Speakers.JUROR_A)
-        val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, speakerId, focusedId, 0, i)
+        val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, Juror.JurorA, Juror.JurorA, 0, i)
         builder.finish(captionMessageOffset)
         val buf = builder.dataBuffer()
         val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)
