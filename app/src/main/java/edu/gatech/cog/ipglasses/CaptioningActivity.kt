@@ -19,16 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.flatbuffers.FlatBufferBuilder
-import com.google.gson.Gson
 import edu.gatech.cog.ipglasses.cog.CaptionMessage
 import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.cog.OrientationMessage
 import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
-import kotlinx.coroutines.delay
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.lang.Thread.sleep
 import java.net.Socket
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
@@ -83,13 +80,6 @@ object Renderers {
     const val FOCUSED_SPEAKER_AND_GLOBAL = 9
 }
 
-object Speakers {
-    const val JUROR_A = "juror-a"
-    const val JUROR_B = "juror-b"
-    const val JUROR_C = "juror-c"
-    const val JURY_FOREMAN = "jury-foreman"
-}
-
 
 /**
  * A map from the requested rendering method to a renderer. If a [Renderers] value is not in this function's `when` statement, it is not supported yet.
@@ -134,7 +124,6 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private val orientationAngles = FloatArray(3)
 
     private val model: CaptioningViewModel by viewModels()
-    private lateinit var socket: Socket
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -212,9 +201,13 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             val messageByteArray =
                 ByteArray(1024) // Allocate a byte array of the given message length
             messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
-            val captionMessage: CaptionMessage = CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
-            Log.d(TAG, "messageId = ${captionMessage.messageId()}, chunkId = ${captionMessage.chunkId()}")
-            Log.d(TAG,"text = ${captionMessage.text()}")
+            val captionMessage: CaptionMessage =
+                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
+            Log.d(
+                TAG,
+                "messageId = ${captionMessage.messageId()}, chunkId = ${captionMessage.chunkId()}"
+            )
+            Log.d(TAG, "text = ${captionMessage.text()}")
             model.addMessage(captionMessage = captionMessage)
         }
     }
@@ -224,7 +217,15 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         try {
             while (socket.isConnected) {
                 val messageOutputStream = DataOutputStream(socket.getOutputStream())
-                val orientationMessage = OrientationMessage.createOrientationMessage(builder, orientationAngles[0], orientationAngles[1], orientationAngles[2])
+                val orientationMessage = OrientationMessage.createOrientationMessage(
+                    builder,
+                    orientationAngles[0],
+                    orientationAngles[1],
+                    orientationAngles[2],
+                    gyroscopeReading[0],
+                    gyroscopeReading[1],
+                    gyroscopeReading[2]
+                )
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
                 messageOutputStream.write(buf)
@@ -260,12 +261,16 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
-        if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
-            System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
-        } else if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
-            System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
-        } else if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
-            System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
+        when (event.sensor.type) {
+            Sensor.TYPE_ACCELEROMETER -> {
+                System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
+            }
+            Sensor.TYPE_MAGNETIC_FIELD -> {
+                System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
+            }
+            Sensor.TYPE_GYROSCOPE -> {
+                System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
+            }
         }
         updateOrientationAngles()
     }
@@ -274,7 +279,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 //        TODO("Not yet implemented")
     }
 
-    fun updateOrientationAngles() {
+    private fun updateOrientationAngles() {
         // Update rotation matrix, which is needed to update orientation angles.
         SensorManager.getRotationMatrix(
             rotationMatrix,
@@ -282,7 +287,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             accelerometerReading,
             magnetometerReading,
 
-        )
+            )
 
         // "rotationMatrix" now has up-to-date information.
 
@@ -300,7 +305,8 @@ fun DefaultPreview() {
     viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
     val builder = FlatBufferBuilder(1024)
     val text = builder.createString(LoremIpsum().values.first())
-    val captionMessageOffset = CaptionMessage.createCaptionMessage(builder, text, Juror.JurorA, Juror.JurorA, 0, 0)
+    val captionMessageOffset =
+        CaptionMessage.createCaptionMessage(builder, text, Juror.JurorA, Juror.JurorA, 0, 0)
     builder.finish(captionMessageOffset)
     val buf = builder.dataBuffer()
     val captionMessage = CaptionMessage.getRootAsCaptionMessage(buf)

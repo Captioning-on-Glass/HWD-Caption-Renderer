@@ -10,7 +10,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import edu.gatech.cog.ipglasses.R
-import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 

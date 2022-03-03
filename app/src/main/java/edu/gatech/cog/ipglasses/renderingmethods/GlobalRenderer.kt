@@ -13,7 +13,6 @@ import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.flatbuffers.FlatBufferBuilder
 import edu.gatech.cog.ipglasses.CaptioningViewModel
 import edu.gatech.cog.ipglasses.Renderers
-import edu.gatech.cog.ipglasses.Speakers
 import edu.gatech.cog.ipglasses.cog.CaptionMessage
 import edu.gatech.cog.ipglasses.cog.Juror
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
