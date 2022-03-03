@@ -128,6 +128,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private val accelerometerReading = FloatArray(3)
     private val magnetometerReading = FloatArray(3)
+    private val gyroscopeReading = FloatArray(3)
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
@@ -184,6 +185,14 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             sensorManager.registerListener(
                 this,
                 magneticField,
+                SensorManager.SENSOR_DELAY_NORMAL,
+                SensorManager.SENSOR_DELAY_UI
+            )
+        }
+        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.also { gyroscope ->
+            sensorManager.registerListener(
+                this,
+                gyroscope,
                 SensorManager.SENSOR_DELAY_NORMAL,
                 SensorManager.SENSOR_DELAY_UI
             )
@@ -255,6 +264,8 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
         } else if (event.sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
+        } else if (event.sensor.type == Sensor.TYPE_GYROSCOPE) {
+            System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
         }
         updateOrientationAngles()
     }
@@ -267,9 +278,10 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         // Update rotation matrix, which is needed to update orientation angles.
         SensorManager.getRotationMatrix(
             rotationMatrix,
-            null,
+            gyroscopeReading,
             accelerometerReading,
-            magnetometerReading
+            magnetometerReading,
+
         )
 
         // "rotationMatrix" now has up-to-date information.
