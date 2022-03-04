@@ -230,7 +230,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
                 Log.d(TAG, "buf size = ${buf.size}")
-                val packet = DatagramPacket(buf, 0, 1024)
+                val packet = DatagramPacket(buf, 0, buf.size)
                 socket.send(packet)
             }
         } catch (e: Exception) {
@@ -245,8 +245,10 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
         thread {
             try {
-                val socket = DatagramSocket(
-                    port, InetAddress.getByName(host)
+                val socket = DatagramSocket()
+                socket.connect(
+                    InetAddress.getByName(host),
+                    port
                 ) // Connect to captioning server, blocks thread until successful or errors.
 //                thread {
 //                    streamCaptionsFromServer(socket)
