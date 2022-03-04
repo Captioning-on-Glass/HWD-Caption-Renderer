@@ -207,7 +207,6 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 //                TAG,
 //                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
 //            )
-            Log.d(TAG, "text = ${captionMessage.text}")
             model.addMessage(captionMessage = captionMessage)
         }
     }
@@ -264,7 +263,13 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
             Sensor.TYPE_ACCELEROMETER -> {
-                System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.size)
+                System.arraycopy(
+                    event.values,
+                    0,
+                    accelerometerReading,
+                    0,
+                    accelerometerReading.size
+                )
             }
             Sensor.TYPE_MAGNETIC_FIELD -> {
                 System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
@@ -284,11 +289,10 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         // Update rotation matrix, which is needed to update orientation angles.
         SensorManager.getRotationMatrix(
             rotationMatrix,
-            gyroscopeReading,
+            null,
             accelerometerReading,
             magnetometerReading,
-
-            )
+        )
 
         // "rotationMatrix" now has up-to-date information.
 
