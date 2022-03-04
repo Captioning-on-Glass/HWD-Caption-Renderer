@@ -203,19 +203,19 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
             val captionMessage: CaptionMessage =
                 CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
-            Log.d(
-                TAG,
-                "messageId = ${captionMessage.messageId()}, chunkId = ${captionMessage.chunkId()}"
-            )
-            Log.d(TAG, "text = ${captionMessage.text()}")
+//            Log.d(
+//                TAG,
+//                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
+//            )
+            Log.d(TAG, "text = ${captionMessage.text}")
             model.addMessage(captionMessage = captionMessage)
         }
     }
 
     private fun streamOrientationToServer(socket: Socket) {
-        val builder = FlatBufferBuilder(1024)
         try {
             while (socket.isConnected) {
+                val builder = FlatBufferBuilder(1024)
                 val messageOutputStream = DataOutputStream(socket.getOutputStream())
                 val orientationMessage = OrientationMessage.createOrientationMessage(
                     builder,
@@ -228,6 +228,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 )
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
+                Log.d(TAG, "buf size = ${buf.size}")
                 messageOutputStream.write(buf)
             }
         } catch (e: Exception) {

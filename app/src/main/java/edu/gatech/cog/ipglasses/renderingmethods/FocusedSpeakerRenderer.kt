@@ -62,7 +62,7 @@ fun FocusedSpeakerRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text() },
+            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text.toString() },
         )
     }
 }

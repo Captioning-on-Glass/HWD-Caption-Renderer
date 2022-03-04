@@ -68,7 +68,7 @@ fun GlobalWithDirectionIndicatorsRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.BottomEnd)
                 .fillMaxWidth(0.8f),
             maxBottomLines = MAX_LINES,
-            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text() },
+            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text.toString() },
         )
     }
 }

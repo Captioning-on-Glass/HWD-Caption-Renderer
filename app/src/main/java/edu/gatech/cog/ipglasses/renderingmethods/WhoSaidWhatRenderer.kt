@@ -60,19 +60,19 @@ fun WhoSaidWhatRenderer(viewModel: CaptioningViewModel) {
     val textToDisplay = if (globalCaptionMessages.isEmpty()) {
         ""
     } else {
-        val sortedMessagesMap = globalCaptionMessages.groupBy { it.messageId() }
+        val sortedMessagesMap = globalCaptionMessages.groupBy { it.messageId }
             .toSortedMap() // Group all the captions we have so far by messageId
         val latestMessage: List<CaptionMessage> =
             sortedMessagesMap[sortedMessagesMap.lastKey()]!!
-        val speakerName = when (latestMessage.first().speakerId()) {
+        val speakerName = when (latestMessage.first().speakerId) {
             Juror.JurorA -> "Juror A"
             Juror.JurorB -> "Juror B"
             Juror.JurorC -> "Juror C"
             Juror.JuryForeman -> "Jury Foreman"
             else -> ""
         }
-        latestMessage.sortedBy { captionMessage -> captionMessage.chunkId() }
-            .joinToString(" ", prefix = "$speakerName: ") { message -> message.text() }
+        latestMessage.sortedBy { captionMessage -> captionMessage.chunkId }
+            .joinToString(" ", prefix = "$speakerName: ") { message -> message.text.toString() }
 
     }
     Box(

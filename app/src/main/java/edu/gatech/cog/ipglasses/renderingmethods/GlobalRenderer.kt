@@ -56,7 +56,7 @@ fun GlobalPreview() {
 @Composable
 fun GlobalRenderer(viewModel: CaptioningViewModel) {
     val globalCaptionMessages = viewModel.globalCaptionMessages.value
-    val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text() }
+    val textToDisplay = globalCaptionMessages.joinToString(" ") { message -> message.text.toString() }
     Box(
         modifier = Modifier.fillMaxHeight().fillMaxWidth(0.8f)
     ) {

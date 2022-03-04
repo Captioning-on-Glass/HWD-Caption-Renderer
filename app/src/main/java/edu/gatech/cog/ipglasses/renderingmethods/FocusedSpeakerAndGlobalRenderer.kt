@@ -33,7 +33,7 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.TopEnd)
                 .width(240.dp),
             maxBottomLines = MAX_LINES,
-            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text() },
+            text = viewModel.globalCaptionMessages.value.joinToString(" ") { message -> message.text.toString() },
             style = Typography.body2
         )
         LimitedText(
@@ -41,7 +41,7 @@ fun FocusedSpeakerAndGlobalRenderer(viewModel: CaptioningViewModel) {
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
             maxBottomLines = MAX_LINES,
-            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text() },
+            text = viewModel.currentFocusedSpeakerCaptionMessages.value.joinToString(" ") { message -> message.text.toString() },
             style = Typography.body1
         )
     }
