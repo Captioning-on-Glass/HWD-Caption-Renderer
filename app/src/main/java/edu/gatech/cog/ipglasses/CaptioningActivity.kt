@@ -26,6 +26,9 @@ import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 import java.net.Socket
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
@@ -195,27 +198,26 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
-    private fun streamCaptionsFromServer(socket: Socket) {
-        while (socket.isConnected) {
-            val messageInputStream = DataInputStream(socket.getInputStream())
-            val messageByteArray =
-                ByteArray(1024) // Allocate a byte array of the given message length
-            messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
-            val captionMessage: CaptionMessage =
-                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
-//            Log.d(
-//                TAG,
-//                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
-//            )
-            model.addMessage(captionMessage = captionMessage)
-        }
-    }
+//    private fun streamCaptionsFromServer(socket: DatagramSocket) {
+//        while (socket.isConnected) {
+//            val messageInputStream = DataInputStream(socket.getInputStream())
+//            val messageByteArray =
+//                ByteArray(1024) // Allocate a byte array of the given message length
+//            messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
+//            val captionMessage: CaptionMessage =
+//                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
+////            Log.d(
+////                TAG,
+////                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
+////            )
+//            model.addMessage(captionMessage = captionMessage)
+//        }
+//    }
 
-    private fun streamOrientationToServer(socket: Socket) {
+    private fun streamOrientationToServer(socket: DatagramSocket) {
         try {
             while (socket.isConnected) {
                 val builder = FlatBufferBuilder(1024)
-                val messageOutputStream = DataOutputStream(socket.getOutputStream())
                 val orientationMessage = OrientationMessage.createOrientationMessage(
                     builder,
                     orientationAngles[0],
@@ -228,7 +230,8 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
                 Log.d(TAG, "buf size = ${buf.size}")
-                messageOutputStream.write(buf)
+                val packet = DatagramPacket(buf, 0, 1024)
+                socket.send(packet)
             }
         } catch (e: Exception) {
             Log.e(TAG, e.stackTraceToString())
@@ -242,13 +245,12 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
         thread {
             try {
-                val socket = Socket(
-                    host,
-                    port
+                val socket = DatagramSocket(
+                    port, InetAddress.getByName(host)
                 ) // Connect to captioning server, blocks thread until successful or errors.
-                thread {
-                    streamCaptionsFromServer(socket)
-                }
+//                thread {
+//                    streamCaptionsFromServer(socket)
+//                }
                 thread {
                     streamOrientationToServer(socket)
                 }
