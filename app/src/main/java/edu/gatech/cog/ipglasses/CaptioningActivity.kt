@@ -125,7 +125,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
-
+    
     private val model: CaptioningViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -169,24 +169,24 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             sensorManager.registerListener(
                 this,
                 accelerometer,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_FASTEST
             )
         }
         sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)?.also { magneticField ->
             sensorManager.registerListener(
                 this,
                 magneticField,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_FASTEST
             )
         }
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.also { gyroscope ->
             sensorManager.registerListener(
                 this,
                 gyroscope,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_FASTEST
             )
         }
     }
@@ -198,21 +198,22 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
-//    private fun streamCaptionsFromServer(socket: DatagramSocket) {
-//        while (socket.isConnected) {
-//            val messageInputStream = DataInputStream(socket.getInputStream())
-//            val messageByteArray =
-//                ByteArray(1024) // Allocate a byte array of the given message length
-//            messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
-//            val captionMessage: CaptionMessage =
-//                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
-////            Log.d(
-////                TAG,
-////                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
-////            )
-//            model.addMessage(captionMessage = captionMessage)
-//        }
-//    }
+    private fun streamCaptionsFromServer(socket: DatagramSocket) {
+        while (socket.isConnected) {
+            Log.d(TAG,"streaming from server...")
+            val messageByteArray =
+                ByteArray(1024) // Allocate a byte array of the given message length
+            val packet = DatagramPacket(messageByteArray, messageByteArray.size)
+            socket.receive(packet)
+            val captionMessage: CaptionMessage =
+                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(packet.data)) // Load the CaptionMessage
+            Log.d(
+                TAG,
+                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
+            )
+            model.addMessage(captionMessage = captionMessage)
+        }
+    }
 
     private fun streamOrientationToServer(socket: DatagramSocket) {
         try {
@@ -229,7 +230,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 )
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
-                Log.d(TAG, "buf size = ${buf.size}")
+//                Log.d(TAG, "buf size = ${buf.size}")
                 val packet = DatagramPacket(buf, 0, buf.size)
                 socket.send(packet)
             }
@@ -250,9 +251,9 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                     InetAddress.getByName(host),
                     port
                 ) // Connect to captioning server, blocks thread until successful or errors.
-//                thread {
-//                    streamCaptionsFromServer(socket)
-//                }
+                thread {
+                    streamCaptionsFromServer(socket)
+                }
                 thread {
                     streamOrientationToServer(socket)
                 }
