@@ -26,6 +26,9 @@ import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
 import java.io.DataInputStream
 import java.io.DataOutputStream
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 import java.net.Socket
 import java.nio.ByteBuffer
 import kotlin.concurrent.thread
@@ -122,7 +125,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
-
+    
     private val model: CaptioningViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -166,24 +169,24 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             sensorManager.registerListener(
                 this,
                 accelerometer,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_FASTEST
             )
         }
         sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)?.also { magneticField ->
             sensorManager.registerListener(
                 this,
                 magneticField,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_FASTEST
             )
         }
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.also { gyroscope ->
             sensorManager.registerListener(
                 this,
                 gyroscope,
-                SensorManager.SENSOR_DELAY_NORMAL,
-                SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_FASTEST,
+                SensorManager.SENSOR_DELAY_FASTEST
             )
         }
     }
@@ -195,27 +198,27 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         sensorManager.unregisterListener(this)
     }
 
-    private fun streamCaptionsFromServer(socket: Socket) {
+    private fun streamCaptionsFromServer(socket: DatagramSocket) {
         while (socket.isConnected) {
-            val messageInputStream = DataInputStream(socket.getInputStream())
+            Log.d(TAG,"streaming from server...")
             val messageByteArray =
                 ByteArray(1024) // Allocate a byte array of the given message length
-            messageInputStream.read(messageByteArray) // Read the message content (as bytes) into the new array
+            val packet = DatagramPacket(messageByteArray, messageByteArray.size)
+            socket.receive(packet)
             val captionMessage: CaptionMessage =
-                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(messageByteArray)) // Load the CaptionMessage
-//            Log.d(
-//                TAG,
-//                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
-//            )
+                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(packet.data)) // Load the CaptionMessage
+            Log.d(
+                TAG,
+                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
+            )
             model.addMessage(captionMessage = captionMessage)
         }
     }
 
-    private fun streamOrientationToServer(socket: Socket) {
+    private fun streamOrientationToServer(socket: DatagramSocket) {
         try {
             while (socket.isConnected) {
                 val builder = FlatBufferBuilder(1024)
-                val messageOutputStream = DataOutputStream(socket.getOutputStream())
                 val orientationMessage = OrientationMessage.createOrientationMessage(
                     builder,
                     orientationAngles[0],
@@ -227,8 +230,9 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 )
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
-                Log.d(TAG, "buf size = ${buf.size}")
-                messageOutputStream.write(buf)
+//                Log.d(TAG, "buf size = ${buf.size}")
+                val packet = DatagramPacket(buf, 0, buf.size)
+                socket.send(packet)
             }
         } catch (e: Exception) {
             Log.e(TAG, e.stackTraceToString())
@@ -242,8 +246,9 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
         thread {
             try {
-                val socket = Socket(
-                    host,
+                val socket = DatagramSocket()
+                socket.connect(
+                    InetAddress.getByName(host),
                     port
                 ) // Connect to captioning server, blocks thread until successful or errors.
                 thread {
