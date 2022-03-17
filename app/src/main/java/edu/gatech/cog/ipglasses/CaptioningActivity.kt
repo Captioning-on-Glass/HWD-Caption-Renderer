@@ -109,10 +109,10 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.also { gyroscope ->
+        sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)?.also { gameRotationVector ->
             sensorManager.registerListener(
                 this,
-                gyroscope,
+                gameRotationVector,
                 SensorManager.SENSOR_DELAY_GAME,
                 SensorManager.SENSOR_DELAY_GAME
             )
