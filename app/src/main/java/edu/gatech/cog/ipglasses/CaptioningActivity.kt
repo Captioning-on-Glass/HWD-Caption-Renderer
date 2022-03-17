@@ -1,5 +1,6 @@
 package edu.gatech.cog.ipglasses
 
+import LiveTranscribeRenderer
 import android.content.Context
 import android.content.Intent
 import android.hardware.Sensor
@@ -19,13 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.datasource.LoremIpsum
 import com.google.flatbuffers.FlatBufferBuilder
-import edu.gatech.cog.ipglasses.cog.CaptionMessage
-import edu.gatech.cog.ipglasses.cog.Juror
-import edu.gatech.cog.ipglasses.cog.OrientationMessage
+import edu.gatech.cog.CaptionMessage
+import edu.gatech.cog.Juror
+import edu.gatech.cog.OrientationMessage
 import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
-import java.io.DataInputStream
-import java.io.DataOutputStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -39,48 +38,10 @@ private val TAG = CaptioningActivity::class.java.simpleName
  * List of all the possible renderers that the <a href="https://github.com/SaltyQuetzals/cog-group-convo">server</a> can request.
  */
 object Renderers {
-    /**
-     * Show captions only on the computer monitors. Since no display behavior is happening on the
-     * head-worn display, nothing should happen if the renderer is set to this value.
-     */
-    const val MONITOR_ONLY = 1
-
-    /**
-     * Show all spoken language on the head-worn display, regardless of speaker.
-     */
-    const val GLOBAL_ONLY = 2
-
-    /**
-     * Show all spoken language on the head-worn display. Anything dependent on this value should behave
-     * identically to its behavior when [MONITOR_ONLY] is set.
-     */
-    const val MONITOR_AND_GLOBAL = 3
-
-    /**
-     * Show all spoken language on the head-worn display, with indicators to show which direction the speaker is speaking from.
-     */
-    const val GLOBAL_WITH_DIRECTION_INDICATORS = 4
-
-    /**
-     * Show all spoken language as text on the head-worn display with indicators as to who said what.
-     */
-    const val WHO_SAID_WHAT = 5
-
-    /**
-     * Anything dependent on this value should behave identically to its behavior when [GLOBAL_WITH_DIRECTION_INDICATORS] is set.
-     */
-    const val MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS = 6
-
-    /**
-     * Show only the spoken language of the person being focused upon on the head-worn-display.
-     */
-    const val FOCUSED_SPEAKER_ONLY = 8
-
-    /**
-     * Show the spoken language of the person being focused upon in a primary position on the
-     * head-worn display, but also show all spoken language in a secondary position.
-     */
-    const val FOCUSED_SPEAKER_AND_GLOBAL = 9
+    const val REGISTERED_GRAPHICS = 1
+    const val NONREGISTERED_GRAPHICS = 2
+    const val NONREGISTERED_GRAPHICS_WITH_ARROWS = 3
+    const val LIVE_TRANSCRIBE_SIMULATION = 4
 }
 
 
@@ -90,19 +51,10 @@ object Renderers {
 @Composable
 fun RendererForRequestedMethod(requestedRenderingMethod: Int, model: CaptioningViewModel) {
     when (requestedRenderingMethod) {
-        Renderers.MONITOR_ONLY -> {
-        } // Monitor-only is a no-op, nothing to do
-        Renderers.GLOBAL_ONLY -> GlobalRenderer(model)
-        Renderers.MONITOR_AND_GLOBAL -> GlobalRenderer(model)
-        Renderers.GLOBAL_WITH_DIRECTION_INDICATORS -> GlobalWithDirectionIndicatorsRenderer(model)
-        Renderers.WHO_SAID_WHAT -> WhoSaidWhatRenderer(model)
-        Renderers.MONITOR_AND_GLOBAL_WITH_DIRECTION_INDICATORS -> GlobalWithDirectionIndicatorsRenderer(
-            model
-        )
-        Renderers.FOCUSED_SPEAKER_ONLY -> FocusedSpeakerRenderer(model)
-        Renderers.FOCUSED_SPEAKER_AND_GLOBAL -> FocusedSpeakerAndGlobalRenderer(
-            model
-        )
+        Renderers.REGISTERED_GRAPHICS -> {}
+        Renderers.NONREGISTERED_GRAPHICS -> {}
+        Renderers.NONREGISTERED_GRAPHICS_WITH_ARROWS -> {}
+        Renderers.LIVE_TRANSCRIBE_SIMULATION -> LiveTranscribeRenderer(model)
         else -> {
             Log.d(
                 TAG,
@@ -121,11 +73,11 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private val accelerometerReading = FloatArray(3)
     private val magnetometerReading = FloatArray(3)
-    private val gyroscopeReading = FloatArray(3)
+    private val gameRotationVectorReading = FloatArray(3)
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
-    
+
     private val model: CaptioningViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -134,7 +86,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val requestedRenderingMethod =
-            intent.getIntExtra(RENDERING_METHOD, Renderers.FOCUSED_SPEAKER_ONLY)
+            intent.getIntExtra(RENDERING_METHOD, Renderers.REGISTERED_GRAPHICS)
         val host = intent.getStringExtra(SERVER_HOST)
         val port = intent.getIntExtra(SERVER_PORT, 0)
         beginStreamingCaptionsFromServer(host, port)
@@ -157,36 +109,12 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-
-        // Get updates from the accelerometer and magnetometer at a constant rate.
-        // To make batch operations more efficient and reduce power consumption,
-        // provide support for delaying updates to the application.
-        //
-        // In this example, the sensor reporting delay is small enough such that
-        // the application receives an update before the system checks the sensor
-        // readings again.
-        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.also { accelerometer ->
-            sensorManager.registerListener(
-                this,
-                accelerometer,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                SensorManager.SENSOR_DELAY_FASTEST
-            )
-        }
-        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)?.also { magneticField ->
-            sensorManager.registerListener(
-                this,
-                magneticField,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                SensorManager.SENSOR_DELAY_FASTEST
-            )
-        }
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)?.also { gyroscope ->
             sensorManager.registerListener(
                 this,
                 gyroscope,
-                SensorManager.SENSOR_DELAY_FASTEST,
-                SensorManager.SENSOR_DELAY_FASTEST
+                SensorManager.SENSOR_DELAY_GAME,
+                SensorManager.SENSOR_DELAY_GAME
             )
         }
     }
@@ -200,7 +128,6 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     private fun streamCaptionsFromServer(socket: DatagramSocket) {
         while (socket.isConnected) {
-            Log.d(TAG,"streaming from server...")
             val messageByteArray =
                 ByteArray(1024) // Allocate a byte array of the given message length
             val packet = DatagramPacket(messageByteArray, messageByteArray.size)
@@ -223,10 +150,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                     builder,
                     orientationAngles[0],
                     orientationAngles[1],
-                    orientationAngles[2],
-                    gyroscopeReading[0],
-                    gyroscopeReading[1],
-                    gyroscopeReading[2]
+                    orientationAngles[2]
                 )
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
@@ -276,11 +200,14 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                     accelerometerReading.size
                 )
             }
-            Sensor.TYPE_MAGNETIC_FIELD -> {
-                System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
-            }
-            Sensor.TYPE_GYROSCOPE -> {
-                System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
+            Sensor.TYPE_GAME_ROTATION_VECTOR -> {
+                System.arraycopy(
+                    event.values,
+                    0,
+                    gameRotationVectorReading,
+                    0,
+                    gameRotationVectorReading.size
+                )
             }
         }
         updateOrientationAngles()
@@ -292,15 +219,8 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     private fun updateOrientationAngles() {
         // Update rotation matrix, which is needed to update orientation angles.
-        SensorManager.getRotationMatrix(
-            rotationMatrix,
-            null,
-            accelerometerReading,
-            magnetometerReading,
-        )
-
+        SensorManager.getRotationMatrixFromVector(rotationMatrix, gameRotationVectorReading)
         // "rotationMatrix" now has up-to-date information.
-
         SensorManager.getOrientation(rotationMatrix, orientationAngles)
         // "orientationAngles" now has up-to-date information.
     }
@@ -312,7 +232,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 @Composable
 fun DefaultPreview() {
     val viewModel = CaptioningViewModel()
-    viewModel.renderingMethodToUse = Renderers.FOCUSED_SPEAKER_ONLY
+    viewModel.renderingMethodToUse = Renderers.REGISTERED_GRAPHICS
     val builder = FlatBufferBuilder(1024)
     val text = builder.createString(LoremIpsum().values.first())
     val captionMessageOffset =

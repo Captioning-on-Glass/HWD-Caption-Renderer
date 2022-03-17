@@ -12,14 +12,14 @@ val Typography = Typography(
     body1 = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        color = Color.Green
+        fontSize = 32.sp,
+        color = Color.White
     ),
     body2 = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
         fontSize = 32.sp,
-        color = Color.Green
+        color = Color.White
     )
     /* Other default text styles to override
     button = TextStyle(
