@@ -73,7 +73,6 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private val accelerometerReading = FloatArray(3)
     private val magnetometerReading = FloatArray(3)
-    private val gameRotationVectorReading = FloatArray(3)
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
@@ -109,14 +108,23 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        sensorManager.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR)?.also { gameRotationVector ->
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.also { accelerometer ->
             sensorManager.registerListener(
                 this,
-                gameRotationVector,
-                SensorManager.SENSOR_DELAY_GAME,
-                SensorManager.SENSOR_DELAY_GAME
+                accelerometer,
+                SensorManager.SENSOR_DELAY_NORMAL,
+                SensorManager.SENSOR_DELAY_UI
             )
         }
+        sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)?.also { magneticField ->
+            sensorManager.registerListener(
+                this,
+                magneticField,
+                SensorManager.SENSOR_DELAY_NORMAL,
+                SensorManager.SENSOR_DELAY_UI
+            )
+        }
+
     }
 
     override fun onPause() {
@@ -191,7 +199,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
-            Sensor.TYPE_ACCELEROMETER -> {
+            Sensor.TYPE_ACCELEROMETER ->
                 System.arraycopy(
                     event.values,
                     0,
@@ -199,16 +207,9 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                     0,
                     accelerometerReading.size
                 )
-            }
-            Sensor.TYPE_GAME_ROTATION_VECTOR -> {
-                System.arraycopy(
-                    event.values,
-                    0,
-                    gameRotationVectorReading,
-                    0,
-                    gameRotationVectorReading.size
-                )
-            }
+            Sensor.TYPE_MAGNETIC_FIELD ->
+                System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
+
         }
         updateOrientationAngles()
     }
@@ -219,8 +220,12 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     private fun updateOrientationAngles() {
         // Update rotation matrix, which is needed to update orientation angles.
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, gameRotationVectorReading)
-        // "rotationMatrix" now has up-to-date information.
+        SensorManager.getRotationMatrix(
+            rotationMatrix,
+            null,
+            accelerometerReading,
+            magnetometerReading
+        )
         SensorManager.getOrientation(rotationMatrix, orientationAngles)
         // "orientationAngles" now has up-to-date information.
     }
