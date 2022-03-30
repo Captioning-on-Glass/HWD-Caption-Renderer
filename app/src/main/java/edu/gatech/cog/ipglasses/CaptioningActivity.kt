@@ -87,7 +87,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             intent.getIntExtra(RENDERING_METHOD, Renderers.REGISTERED_GRAPHICS)
         val host = intent.getStringExtra(SERVER_HOST)
         val port = intent.getIntExtra(SERVER_PORT, 0)
-        beginStreamingCaptionsFromServer(host, port)
+        beginStreamingCaptionsFromServer(host, port, requestedRenderingMethod)
         Log.d(TAG, "Requested rendering method is: $requestedRenderingMethod")
         model.renderingMethodToUse = requestedRenderingMethod
         setContent {
@@ -142,8 +142,10 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     private fun streamOrientationToServer(socket: DatagramSocket) {
         try {
+            val builder = FlatBufferBuilder(1024)
+
             while (socket.isConnected) {
-                val builder = FlatBufferBuilder(1024)
+                builder.clear()
                 val orientationMessage = OrientationMessage.createOrientationMessage(
                     builder,
                     orientationAngles[0],
@@ -165,7 +167,11 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
      * Attempts to create a connection to the given host and port. If successful, begins streaming
      * data from the server, transforming them into [CaptionMessage]s and adding them to the [CaptioningViewModel].
      */
-    private fun beginStreamingCaptionsFromServer(host: String?, port: Int) {
+    private fun beginStreamingCaptionsFromServer(
+        host: String?,
+        port: Int,
+        presentationMethod: Int
+    ) {
         thread {
             try {
                 val socket = DatagramSocket()
@@ -173,11 +179,15 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                     InetAddress.getByName(host),
                     port
                 ) // Connect to captioning server, blocks thread until successful or errors.
-                thread {
-                    streamCaptionsFromServer(socket)
+                if (presentationMethod == Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+                    thread {
+                        streamCaptionsFromServer(socket)
+                    }
                 }
-                thread {
-                    streamOrientationToServer(socket)
+                if (presentationMethod != Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+                    thread {
+                        streamOrientationToServer(socket)
+                    }
                 }
             } catch (e: Exception) {
                 val intent = Intent(this, MainActivity::class.java)
