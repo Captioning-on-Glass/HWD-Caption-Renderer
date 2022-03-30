@@ -111,8 +111,8 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
             sensorManager.registerListener(
                 this,
                 rotationVector,
-                SensorManager.SENSOR_DELAY_GAME,
-                SensorManager.SENSOR_DELAY_GAME
+                8 * 1000, // us -> ms
+                8 * 1000 // us -> ms
             )
         }
     }
