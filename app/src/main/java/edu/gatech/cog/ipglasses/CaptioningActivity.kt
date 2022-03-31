@@ -25,6 +25,7 @@ import edu.gatech.cog.Juror
 import edu.gatech.cog.OrientationMessage
 import edu.gatech.cog.ipglasses.renderingmethods.*
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
+import kotlinx.coroutines.delay
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -71,10 +72,10 @@ fun RendererForRequestedMethod(requestedRenderingMethod: Int, model: CaptioningV
  */
 class CaptioningActivity : ComponentActivity(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
-    private val rotationVectorReading = FloatArray(3)
 
     private val rotationMatrix = FloatArray(9)
     private val orientationAngles = FloatArray(3)
+    private var rotationVectorSensor: Sensor? = null
 
     private val model: CaptioningViewModel by viewModels()
 
@@ -90,6 +91,8 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         beginStreamingCaptionsFromServer(host, port, requestedRenderingMethod)
         Log.d(TAG, "Requested rendering method is: $requestedRenderingMethod")
         model.renderingMethodToUse = requestedRenderingMethod
+        rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+
         setContent {
             IPGlassesTheme {
                 // A surface container using the 'background' color from the theme
@@ -107,60 +110,33 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
-        sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)?.also { rotationVector ->
+        rotationVectorSensor?.also { rotationVector ->
             sensorManager.registerListener(
                 this,
                 rotationVector,
                 8 * 1000, // us -> ms
-                8 * 1000 // us -> ms
             )
         }
     }
 
     override fun onPause() {
         super.onPause()
-
         // Don't receive any more updates from either sensor.
         sensorManager.unregisterListener(this)
     }
 
-    private fun streamCaptionsFromServer(socket: DatagramSocket) {
-        while (socket.isConnected) {
-            val messageByteArray =
-                ByteArray(1024) // Allocate a byte array of the given message length
-            val packet = DatagramPacket(messageByteArray, messageByteArray.size)
-            socket.receive(packet)
-            val captionMessage: CaptionMessage =
-                CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(packet.data)) // Load the CaptionMessage
-            Log.d(
-                TAG,
-                "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
-            )
-            model.addMessage(captionMessage = captionMessage)
-        }
-    }
-
-    private fun streamOrientationToServer(socket: DatagramSocket) {
-        try {
-            val builder = FlatBufferBuilder(1024)
-
-            while (socket.isConnected) {
-                builder.clear()
-                val orientationMessage = OrientationMessage.createOrientationMessage(
-                    builder,
-                    orientationAngles[0],
-                    orientationAngles[1],
-                    orientationAngles[2]
-                )
-                builder.finish(orientationMessage)
-                val buf = builder.sizedByteArray()
-//                Log.d(TAG, "buf size = ${buf.size}")
-                val packet = DatagramPacket(buf, 0, buf.size)
-                socket.send(packet)
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, e.stackTraceToString())
-        }
+    private fun readCaptionFromServer(socket: DatagramSocket) {
+        val messageByteArray =
+            ByteArray(1024) // Allocate a byte array of the given message length
+        val packet = DatagramPacket(messageByteArray, messageByteArray.size)
+        socket.receive(packet)
+        val captionMessage: CaptionMessage =
+            CaptionMessage.getRootAsCaptionMessage(ByteBuffer.wrap(packet.data)) // Load the CaptionMessage
+        Log.d(
+            TAG,
+            "messageId = ${captionMessage.messageId}, chunkId = ${captionMessage.chunkId}"
+        )
+        model.addMessage(captionMessage = captionMessage)
     }
 
     /**
@@ -173,55 +149,56 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         presentationMethod: Int
     ) {
         thread {
-            try {
-                val socket = DatagramSocket()
-                socket.connect(
-                    InetAddress.getByName(host),
-                    port
-                ) // Connect to captioning server, blocks thread until successful or errors.
-                if (presentationMethod == Renderers.LIVE_TRANSCRIBE_SIMULATION) {
-                    thread {
-                        streamCaptionsFromServer(socket)
+            val socket = DatagramSocket()
+            socket.connect(
+                InetAddress.getByName(host),
+                port
+            ) // Connect to captioning server, blocks thread until successful or errors.
+            if (presentationMethod == Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+                thread {
+                    while (socket.isConnected) {
+                        readCaptionFromServer(socket)
                     }
                 }
-                if (presentationMethod != Renderers.LIVE_TRANSCRIBE_SIMULATION) {
-                    thread {
-                        streamOrientationToServer(socket)
+            } else {
+                thread {
+                    while (socket.isConnected) {
+                        writeOrientationToServer(socket)
+                        Thread.sleep(8)
                     }
                 }
-            } catch (e: Exception) {
-                val intent = Intent(this, MainActivity::class.java)
-                Log.e(TAG, e.message!!)
-                startActivity(intent)
             }
+        }
+    }
+
+    private fun writeOrientationToServer(socket: DatagramSocket) {
+        if (socket.isConnected) {
+            val builder = FlatBufferBuilder(1024)
+            val orientationMessage = OrientationMessage.createOrientationMessage(
+                builder,
+                orientationAngles[0],
+                orientationAngles[1],
+                orientationAngles[2]
+            )
+            builder.finish(orientationMessage)
+            val buf = builder.sizedByteArray()
+//                Log.d(TAG, "buf size = ${buf.size}")
+            val packet = DatagramPacket(buf, 0, buf.size)
+            socket.send(packet)
         }
     }
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
             Sensor.TYPE_ROTATION_VECTOR -> {
-                System.arraycopy(
-                    event.values,
-                    0,
-                    rotationVectorReading,
-                    0,
-                    rotationVectorReading.size
-                )
+                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
+                SensorManager.getOrientation(rotationMatrix, orientationAngles)
             }
         }
-        updateOrientationAngles()
     }
 
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
-//        TODO("Not yet implemented")
-    }
-
-    private fun updateOrientationAngles() {
-        // Update rotation matrix, which is needed to update orientation angles.
-        SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVectorReading)
-        // "rotationMatrix" now has up-to-date information.
-        SensorManager.getOrientation(rotationMatrix, orientationAngles)
-        // "orientationAngles" now has up-to-date information.
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
+        // TODO("Not yet implemented")
     }
 
 
