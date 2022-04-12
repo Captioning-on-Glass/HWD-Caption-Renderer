@@ -2,7 +2,6 @@ package edu.gatech.cog.ipglasses
 
 import LiveTranscribeRenderer
 import android.content.Context
-import android.content.Intent
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -23,9 +22,9 @@ import com.google.flatbuffers.FlatBufferBuilder
 import edu.gatech.cog.CaptionMessage
 import edu.gatech.cog.Juror
 import edu.gatech.cog.OrientationMessage
-import edu.gatech.cog.ipglasses.renderingmethods.*
+import edu.gatech.cog.ipglasses.renderingmethods.DISPLAY_HEIGHT
+import edu.gatech.cog.ipglasses.renderingmethods.DISPLAY_WIDTH
 import edu.gatech.cog.ipglasses.ui.theme.IPGlassesTheme
-import kotlinx.coroutines.delay
 import java.net.DatagramPacket
 import java.net.DatagramSocket
 import java.net.InetAddress
@@ -81,7 +80,6 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         val requestedRenderingMethod =
@@ -90,9 +88,11 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
         val port = intent.getIntExtra(SERVER_PORT, 0)
         beginStreamingCaptionsFromServer(host, port, requestedRenderingMethod)
         Log.d(TAG, "Requested rendering method is: $requestedRenderingMethod")
-        model.renderingMethodToUse = requestedRenderingMethod
-        rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-
+            model.renderingMethodToUse = requestedRenderingMethod
+        if (requestedRenderingMethod != Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+            sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+            rotationVectorSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+        }
         setContent {
             IPGlassesTheme {
                 // A surface container using the 'background' color from the theme
@@ -110,6 +110,9 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
+        if (model.renderingMethodToUse == Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+            return
+        }
         rotationVectorSensor?.also { rotationVector ->
             sensorManager.registerListener(
                 this,
@@ -121,13 +124,16 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
 
     override fun onPause() {
         super.onPause()
+        if (model.renderingMethodToUse == Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+            return
+        }
         // Don't receive any more updates from either sensor.
         sensorManager.unregisterListener(this)
     }
 
     private fun readCaptionFromServer(socket: DatagramSocket) {
         val messageByteArray =
-            ByteArray(1024) // Allocate a byte array of the given message length
+            ByteArray(128) // Allocate a byte array of the given message length
         val packet = DatagramPacket(messageByteArray, messageByteArray.size)
         socket.receive(packet)
         val captionMessage: CaptionMessage =
@@ -160,20 +166,20 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                         readCaptionFromServer(socket)
                     }
                 }
-            } else {
-                thread {
-                    while (socket.isConnected) {
-                        writeOrientationToServer(socket)
-                        Thread.sleep(8)
-                    }
+            }
+            thread {
+                val builder = FlatBufferBuilder(512)
+                while (socket.isConnected) {
+                    builder.clear()
+                    writeOrientationToServer(socket, builder)
+                    Thread.sleep(8)
                 }
             }
         }
     }
 
-    private fun writeOrientationToServer(socket: DatagramSocket) {
+    private fun writeOrientationToServer(socket: DatagramSocket, builder: FlatBufferBuilder) {
         if (socket.isConnected) {
-            val builder = FlatBufferBuilder(1024)
             val orientationMessage = OrientationMessage.createOrientationMessage(
                 builder,
                 orientationAngles[0],
@@ -189,6 +195,9 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
     }
 
     override fun onSensorChanged(event: SensorEvent) {
+        if (model.renderingMethodToUse == Renderers.LIVE_TRANSCRIBE_SIMULATION) {
+            return
+        }
         when (event.sensor.type) {
             Sensor.TYPE_ROTATION_VECTOR -> {
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
