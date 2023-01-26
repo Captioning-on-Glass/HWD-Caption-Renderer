@@ -31,21 +31,6 @@ class OrientationMessage : Table() {
             val o = __offset(8)
             return if(o != 0) bb.getFloat(o + bb_pos) else 0.0f
         }
-    val gyroX : Float
-        get() {
-            val o = __offset(10)
-            return if(o != 0) bb.getFloat(o + bb_pos) else 0.0f
-        }
-    val gyroY : Float
-        get() {
-            val o = __offset(12)
-            return if(o != 0) bb.getFloat(o + bb_pos) else 0.0f
-        }
-    val gyroZ : Float
-        get() {
-            val o = __offset(14)
-            return if(o != 0) bb.getFloat(o + bb_pos) else 0.0f
-        }
     companion object {
         fun validateVersion() = Constants.FLATBUFFERS_2_0_0()
         fun getRootAsOrientationMessage(_bb: ByteBuffer): OrientationMessage = getRootAsOrientationMessage(_bb, OrientationMessage())
@@ -53,23 +38,17 @@ class OrientationMessage : Table() {
             _bb.order(ByteOrder.LITTLE_ENDIAN)
             return (obj.__assign(_bb.getInt(_bb.position()) + _bb.position(), _bb))
         }
-        fun createOrientationMessage(builder: FlatBufferBuilder, azimuth: Float, pitch: Float, roll: Float, gyroX: Float, gyroY: Float, gyroZ: Float) : Int {
-            builder.startTable(6)
-            addGyroZ(builder, gyroZ)
-            addGyroY(builder, gyroY)
-            addGyroX(builder, gyroX)
+        fun createOrientationMessage(builder: FlatBufferBuilder, azimuth: Float, pitch: Float, roll: Float) : Int {
+            builder.startTable(3)
             addRoll(builder, roll)
             addPitch(builder, pitch)
             addAzimuth(builder, azimuth)
             return endOrientationMessage(builder)
         }
-        fun startOrientationMessage(builder: FlatBufferBuilder) = builder.startTable(6)
+        fun startOrientationMessage(builder: FlatBufferBuilder) = builder.startTable(3)
         fun addAzimuth(builder: FlatBufferBuilder, azimuth: Float) = builder.addFloat(0, azimuth, 0.0)
         fun addPitch(builder: FlatBufferBuilder, pitch: Float) = builder.addFloat(1, pitch, 0.0)
         fun addRoll(builder: FlatBufferBuilder, roll: Float) = builder.addFloat(2, roll, 0.0)
-        fun addGyroX(builder: FlatBufferBuilder, gyroX: Float) = builder.addFloat(3, gyroX, 0.0)
-        fun addGyroY(builder: FlatBufferBuilder, gyroY: Float) = builder.addFloat(4, gyroY, 0.0)
-        fun addGyroZ(builder: FlatBufferBuilder, gyroZ: Float) = builder.addFloat(5, gyroZ, 0.0)
         fun endOrientationMessage(builder: FlatBufferBuilder) : Int {
             val o = builder.endTable()
             return o

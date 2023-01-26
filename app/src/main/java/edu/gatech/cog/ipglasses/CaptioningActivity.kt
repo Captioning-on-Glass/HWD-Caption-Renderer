@@ -223,10 +223,7 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                     builder,
                     orientationAngles[0],
                     orientationAngles[1],
-                    orientationAngles[2],
-                    gyroscopeReading[0],
-                    gyroscopeReading[1],
-                    gyroscopeReading[2]
+                    orientationAngles[2]
                 )
                 builder.finish(orientationMessage)
                 val buf = builder.sizedByteArray()
@@ -277,10 +274,22 @@ class CaptioningActivity : ComponentActivity(), SensorEventListener {
                 )
             }
             Sensor.TYPE_MAGNETIC_FIELD -> {
-                System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.size)
+                System.arraycopy(
+                    event.values,
+                    0,
+                    magnetometerReading,
+                    0,
+                    magnetometerReading.size
+                )
             }
             Sensor.TYPE_GYROSCOPE -> {
-                System.arraycopy(event.values, 0, gyroscopeReading, 0, gyroscopeReading.size)
+                System.arraycopy(
+                    event.values,
+                    0,
+                    gyroscopeReading,
+                    0,
+                    gyroscopeReading.size
+                )
             }
         }
         updateOrientationAngles()
