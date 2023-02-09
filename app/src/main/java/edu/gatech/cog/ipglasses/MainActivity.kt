@@ -10,7 +10,6 @@ import com.google.zxing.integration.android.IntentIntegrator
 private val TAG = MainActivity::class.java.simpleName
 const val SERVER_HOST = "edu.gatech.cog.ipglasses.SERVER_HOST"
 const val SERVER_PORT = "edu.gatech.cog.ipglasses.SERVER_PORT"
-const val RENDERING_METHOD = "edu.gatech.cog.ipglasses.RENDERING_METHOD"
 
 /**
  * Starts a QR code scanner. Upon reading a QR code, attempts to split the retrieved string into
@@ -25,15 +24,12 @@ class MainActivity : AppCompatActivity() {
                 // Split the string retrieved from the QR code into host, port, and requested rendering method.
                 val addressAndMethod = intentResult.contents.split(" ")
                 val address = addressAndMethod[0]
-                val renderingMethod =
-                    addressAndMethod[1].toInt() // The rendering method to render captions with.
                 val split = address.split(":")
                 val host = split[0]
                 val port = split[1].toInt()
                 val intent = Intent(this, CaptioningActivity::class.java).apply {
                     putExtra(SERVER_HOST, host)
                     putExtra(SERVER_PORT, port)
-                    putExtra(RENDERING_METHOD, renderingMethod)
                 }
                 startActivity(intent)
             }
