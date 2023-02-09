@@ -1,0 +1,13 @@
+namespace cog;
+
+enum Juror:byte { JurorA = 0, JurorB = 1, JurorC = 2, JuryForeman=3}
+
+table CaptionMessage {
+    text: string;
+    speaker_id: Juror;
+    focused_id: Juror;
+    message_id: int;
+    chunk_id: int;
+}
+
+root_type CaptionMessage;
