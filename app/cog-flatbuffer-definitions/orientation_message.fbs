@@ -1,8 +1,0 @@
-
-namespace cog;
-
-table OrientationMessage {
-    azimuth: float;
-}
-
-root_type OrientationMessage;
