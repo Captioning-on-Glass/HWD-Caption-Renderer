@@ -1,3 +1,5 @@
+theme: minima 
+
 # cog-ip-glasses
 
 This is the companion Android app to the Group Captioning Experiment video display found at https://github.com/Captioning-on-Glass/Group-Conversation-Simulation. 
