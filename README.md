@@ -8,7 +8,9 @@ The Group Captioning Experiment consists of two parts.  One is a C++ app running
 ## Components of this project:
 
 Flatbuffer
+
 QR Code
+
 Sensor Positions
 
 ## Code Walkthrough 
